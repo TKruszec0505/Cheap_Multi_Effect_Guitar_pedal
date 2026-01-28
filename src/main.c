@@ -126,8 +126,8 @@ int main(void) {
         uint8_t stan_A = (PIND & (1 << PD2));
         if (stan_A != stan_A_poprzedni) {
             if (stan_A == 0) { // opadające zbocze
-                if (PIND & (1 << PD5)) opcja = 0; // jedną stronę -> ON
-                else opcja = 1;                  //w drugą -> OFF
+                if (PIND & (1 << PD5)) opcja = 0; // jedną stronę ON
+                else opcja = 1;                  //w drugą OFF
                 rysuj_menu(opcja);
             }
         }
