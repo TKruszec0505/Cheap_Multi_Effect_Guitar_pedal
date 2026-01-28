@@ -16,4 +16,6 @@ void oled_clear();
 
 void draw(const uint8_t* d, uint8_t len);
 void draw_menu(int8_t state);
+
+void oled_draw_bitmap(const uint8_t* bitmap);
 #endif //OLEDMENUGUI_H
