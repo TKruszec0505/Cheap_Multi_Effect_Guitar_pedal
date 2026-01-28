@@ -10,8 +10,7 @@ void init_audio_system() {
     ADCSRA = (1 << ADEN) | (1 << ADPS2);
 
     //wyjście
-    TCCR1A |= (1 << COM1A1) | (1 << WGM10);
-    TCCR1B |= (1 << WGM12) | (1 << CS10);
+
 }
 
 void clean() {
