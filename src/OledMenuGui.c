@@ -79,14 +79,44 @@ const unsigned char epd_bitmap_logo1 [] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-
-
-
-const uint8_t char_ARROW[] = {0x08, 0x08, 0x3E, 0x1C, 0x08};
+const uint8_t char_ARROW[] PROGMEM = {0x08, 0x08, 0x3E, 0x1C, 0x08};
 //const uint8_t ARROW[] = {0x08, 0x1C, 0x3E, 0x08, 0x08};
 //const uint8_t N[]     =                       {0x7F, 0x02, 0x04, 0x08, 0x7F};
-const uint8_t font_ON[]    = {0x3E, 0x41, 0x3E, 0x00, 0x7F, 0x02, 0x04, 0x08, 0x7F}; // ON
-const uint8_t font_OFF[]   = {0x3E, 0x41, 0x3E, 0x00, 0x7F, 0x09, 0x01, 0x00, 0x7F, 0x09, 0x01}; // OFF
+const uint8_t font_ON[] PROGMEM   = {0x3E, 0x41, 0x3E, 0x00, 0x7F, 0x02, 0x04, 0x08, 0x7F}; // ON
+const uint8_t font_OFF[]PROGMEM   = {0x3E, 0x41, 0x3E, 0x00, 0x7F, 0x09, 0x01, 0x00, 0x7F, 0x09, 0x01}; // OFF
+const uint8_t font_BLINK[]PROGMEM = {
+	0x7F, 0x49, 0x49, 0x41, 0x36, 0x00, // B
+	0x7F, 0x40, 0x40, 0x40, 0x00,       // L
+	0x00, 0x41, 0x7F, 0x41, 0x00,       // I
+	0x7F, 0x04, 0x08, 0x10, 0x60, 0x00, // N
+	0x7F, 0x08, 0x14, 0x22, 0x41        // K
+}; // len = 27
+const uint8_t font_PWM[]PROGMEM = {
+	0x7F, 0x09, 0x09, 0x09, 0x06, 0x00, // P
+	0x7F, 0x02, 0x0C, 0x02, 0x7F, 0x00, // W
+	0x7F, 0x02, 0x04, 0x02, 0x7F        // M
+};
+const uint8_t PROGMEM cyfry[10][5] = {
+	{0x3E, 0x51, 0x49, 0x45, 0x3E}, // 0
+	{0x00, 0x42, 0x7F, 0x40, 0x00}, // 1
+	{0x42, 0x61, 0x51, 0x49, 0x46}, // 2
+	{0x21, 0x41, 0x45, 0x4B, 0x31}, // 3
+	{0x18, 0x14, 0x12, 0x7F, 0x10}, // 4
+	{0x27, 0x45, 0x45, 0x45, 0x39}, // 5
+	{0x3C, 0x4A, 0x49, 0x49, 0x30}, // 6
+	{0x01, 0x71, 0x09, 0x05, 0x03}, // 7
+	{0x36, 0x49, 0x49, 0x49, 0x36}, // 8
+	{0x06, 0x49, 0x49, 0x29, 0x1E}  // 9
+};
+const uint8_t font_WSTECZ[] PROGMEM = {
+	0x7F, 0x20, 0x10, 0x20, 0x7F, 0x00, // W
+	0x26, 0x49, 0x49, 0x49, 0x32, 0x00, // S
+	0x01, 0x01, 0x7F, 0x01, 0x01, 0x00, // T
+	0x7F, 0x49, 0x49, 0x49, 0x41, 0x00, // E
+	0x3E, 0x41, 0x41, 0x41, 0x22, 0x00, // C
+	0x41, 0x61, 0x51, 0x49, 0x46, 0x00  // Z
+};
+const uint8_t PROGMEM znak_procent[] = {0x23, 0x13, 0x08, 0x64, 0x62}; // %
 
 // i2c (TWI)
 void i2c_init() {
@@ -175,7 +205,7 @@ void oled_draw_bitmap(const uint8_t* bitmap) {
 	}
 	i2c_stop();
 
-	//powrot do Page Mode (żeby oled_set_cursor i draw_menu działały poprawnie)
+	//powrot do Page Mode (zeby oled_set_cursor i draw_menu dzialal)
 	send_cmd(0x20); send_cmd(0x02);
 }
 void draw_menu(int8_t state) {
@@ -190,14 +220,87 @@ void draw_menu(int8_t state) {
 
     oled_clear();
     // func 1
-    oled_set_cursor(2, 40);
+    oled_set_cursor(0, 40);
     draw(font_ON, 9);
-    if(state == 0) { oled_set_cursor(2, 20); draw(char_ARROW, 5); }
+    if(state == 0) { oled_set_cursor(0,20 ); draw(char_ARROW, 5); }
 
     // func 2
-    oled_set_cursor(5, 40);
+    oled_set_cursor(2, 40);
     draw(font_OFF, 11);
-    if(state == 1) { oled_set_cursor(5, 20); draw(char_ARROW, 5); }
+    if(state == 1) { oled_set_cursor(2, 20); draw(char_ARROW, 5); }
+
+	oled_set_cursor(4, 40);
+	draw(font_BLINK, 27);
+	if(state == 2) { oled_set_cursor(4, 20); draw(char_ARROW, 5); }
+
+	oled_set_cursor(6, 40);
+	draw(font_PWM, 9);
+	if(state == 3) { oled_set_cursor(6, 20); draw(char_ARROW, 5); }
 
     // kolejne...
+}
+void draw_from_progmem(const uint8_t* d, uint8_t len) {
+	i2c_start();
+	i2c_write(OLED_ADDR);
+	i2c_write(0x40);
+	for (uint8_t i = 0; i < len; i++) {
+		i2c_write(pgm_read_byte(&d[i]));
+	}
+	i2c_write(0x00); // Odstęp między znakami
+	i2c_stop();
+}
+
+// Rysuje puste miejsce (szerokość w pikselach) - zapobiega "skakaniu" tekstu
+void draw_puste(uint8_t szerokosc) {
+	i2c_start();
+	i2c_write(OLED_ADDR);
+	i2c_write(0x40);
+	for (uint8_t i = 0; i < szerokosc; i++) i2c_write(0x00);
+	i2c_stop();
+}
+void rysuj_wartosc_pwm(uint8_t val) {
+	uint8_t s = val / 100;          // Setki
+	uint8_t d = (val / 10) % 10;    // Dziesiątki
+	uint8_t j = val % 10;           // Jedności
+
+	oled_set_cursor(4, 70); // Ustawiamy kursor tam, gdzie ma być liczba
+
+	// Rysuj setki (tylko jeśli > 0)
+	if (s > 0) {
+		draw_from_progmem(cyfry[s], 5);
+	} else {
+		draw_puste(5); // Przesuń kursor bez rysowania, żeby liczba nie skakała
+	}
+
+	// Rysuj dziesiątki (tylko jeśli > 0 lub gdy jest setka)
+	if (s > 0 || d > 0) {
+		draw_from_progmem(cyfry[d], 5);
+	} else {
+		draw_puste(5);
+	}
+
+	// Jedności rysujemy zawsze
+	draw_from_progmem(cyfry[j], 5);
+
+	// Znak %
+	draw_puste(2);
+	draw_from_progmem(znak_procent, 5);
+}
+
+void draw_params_menu(int8_t wybrana, int8_t pwm_val, uint8_t edycja, uint8_t sw) {
+	oled_clear();
+	//WSTECZ
+	oled_set_cursor(0, 40); draw_from_progmem(font_WSTECZ, 36);
+	if(wybrana == 0) { oled_set_cursor(0, 20); draw(char_ARROW, 5); }
+
+	//Stan LED (ON/OFF)
+	oled_set_cursor(3, 40); if(sw) draw(font_ON, 9); else draw(font_OFF, 11);
+	if(wybrana == 1) { oled_set_cursor(3, 20); draw(char_ARROW, 5); }
+
+
+	oled_set_cursor(6, 40); rysuj_wartosc_pwm(pwm_val);
+	if(wybrana == 2) {
+		oled_set_cursor(6, 20);
+		if(edycja) draw(font_ON, 9); else draw(char_ARROW, 5);
+	}
 }

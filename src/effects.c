@@ -4,19 +4,11 @@
 #include "effects.h"
 #include <avr/io.h>
 
-void init_audio_system() {
-    //wejście
-    ADMUX = (1 << REFS0);
-    ADCSRA = (1 << ADEN) | (1 << ADPS2);
-
-    //wyjście
-
-}
 
 void clean() {
 
 }
-void delay(int16_t* inpput_buf) {
+void delay() {
 
 }
 void tremolo() {

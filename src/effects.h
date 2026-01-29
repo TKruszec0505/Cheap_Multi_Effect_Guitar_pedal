@@ -7,9 +7,8 @@
 
 #include "stdio.h"
 
-void init_audio_system();
 void clean();
-void delay(int16_t* inpput_buf);
+void delay();
 void tremolo();
 void chorus();
 
