@@ -18,9 +18,9 @@ typedef enum {
 } TypStanu;
 
 extern const unsigned char epd_bitmap_logo1[] PROGMEM;
-extern const uint8_t char_ARROW[] PROGMEM;
-extern const uint8_t font_ON[] PROGMEM;
-extern const uint8_t font_OFF[] PROGMEM;
+extern const uint8_t char_ARROW[] ;
+extern const uint8_t font_ON[] ;
+extern const uint8_t font_OFF[] ;
 extern const uint8_t font_WSTECZ[] PROGMEM;
 extern const uint8_t cyfry[10][5] PROGMEM;
 
@@ -40,5 +40,9 @@ void oled_draw_bitmap(const uint8_t* bitmap);
 void rysuj_wartosc_pwm(uint8_t val);
 void draw_menu(int8_t state);
 void draw_params_menu(int8_t wybrana, int8_t pwm_val, uint8_t edycja, uint8_t sw);
+
+extern const uint8_t font_PAR1[] PROGMEM;
+extern const uint8_t font_PAR2[] PROGMEM;
+extern const uint8_t font_PAR3[] PROGMEM;
 #endif
 #endif //OLEDMENUGUI_H

@@ -43,7 +43,6 @@ void aktualizuj_pwm(uint8_t v) {
 }
 
 int main(void) {
-    // Konfiguracja I/O
     DDRB |= (1 << LED_PIN);
     DDRD &= ~((1 << PD2) | (1 << PD5) | (1 << PD6));
     PORTD |= (1 << PD2) | (1 << PD5) | (1 << PD6);
