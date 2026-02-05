@@ -127,7 +127,7 @@ int main(void) {
                 draw_menu(op_glowne);
             } else {
                 // Rysuje podmenu: (strzałka, wartość, switch)
-                draw_params_menu(op_pwm_menu, wartosc_pwm, (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM), pwm_aktywne);
+                draw_params_menu_1(op_pwm_menu, wartosc_pwm, (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM), pwm_aktywne);
             }
             odswiez = 0;
         }

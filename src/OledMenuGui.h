@@ -4,8 +4,6 @@
 
 #ifndef OLEDMENUGUI_H
 #define OLEDMENUGUI_H
-#ifndef OLEDMENUGUI_H_
-#define OLEDMENUGUI_H_
 
 #include <avr/pgmspace.h>
 
@@ -32,17 +30,19 @@ void i2c_write(uint8_t data);
 void send_cmd(uint8_t cmd);
 void oled_init(void);
 void oled_clear(void);
+void buffer_clear();
 void oled_set_cursor(uint8_t row, uint8_t col);
+
+void draw_to_buffer(uint8_t row, uint8_t col, const uint8_t* data, uint8_t len, uint8_t is_progmem);
 
 void draw(const uint8_t* d, uint8_t len);
 void draw_from_progmem(const uint8_t* d, uint8_t len);
 void oled_draw_bitmap(const uint8_t* bitmap);
-void rysuj_wartosc_pwm(uint8_t val);
+void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val);
 void draw_menu(int8_t state);
-void draw_params_menu(int8_t wybrana, int8_t pwm_val, uint8_t edycja, uint8_t sw);
+void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, uint8_t edycja, uint8_t sw);
 
 extern const uint8_t font_PAR1[] PROGMEM;
 extern const uint8_t font_PAR2[] PROGMEM;
 extern const uint8_t font_PAR3[] PROGMEM;
 #endif
-#endif //OLEDMENUGUI_H

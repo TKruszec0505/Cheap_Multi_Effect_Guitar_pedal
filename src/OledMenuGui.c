@@ -140,7 +140,7 @@ const uint8_t PROGMEM znak_procent[] = {0x23, 0x13, 0x08, 0x64, 0x62}; // %
 
 // i2c (TWI)
 void i2c_init() {
-    TWBR = 72; // ustawienie zegara SCL 100kHz przy 16MHz
+    TWBR = 12; // ustawienie zegara SCL 400kHz przy 16MHz
     TWCR = (1 << TWEN);
 }
 
@@ -169,7 +169,7 @@ void send_cmd(uint8_t cmd) {
 }
 
 void oled_init() {
-    _delay_ms(100);
+    _delay_ms(10);
     send_cmd(0xAE);                     // Display OFF
     send_cmd(0xD5); send_cmd(0x80);
     send_cmd(0xA8); send_cmd(0x3F);     // 64 linie
@@ -183,31 +183,50 @@ void oled_init() {
     send_cmd(0xAF);                     // Display ON
 }
 
+uint8_t buffer[1024];
+
+void update_display() {
+	// Ustawienie adresu na początek (Page Mode)
+	send_cmd(0x20); send_cmd(0x02); // Upewnij się, że jesteś w Page Mode
+
+	for (uint8_t page = 0; page < 8; page++) {
+		send_cmd(0xB0 | page); // Ustaw stronę (wiersz)
+		send_cmd(0x00);        // Kolumna niższa
+		send_cmd(0x10);        // Kolumna wyższa
+
+		i2c_start();
+		i2c_write(OLED_ADDR);
+		i2c_write(0x40); // TRYB DANYCH
+		for (uint16_t i = 0; i < 128; i++) {
+			i2c_write(buffer[page * 128 + i]);
+		}
+		i2c_stop();
+	}
+}
+
 void oled_set_cursor(uint8_t row, uint8_t col) {
     send_cmd(0xB0 | row);
     send_cmd(0x00 | (col & 0x0F));
     send_cmd(0x10 | (col >> 4));
 }
 
-void oled_clear() {
-    for (uint8_t r = 0; r < 8; r++) {
-        oled_set_cursor(r, 0);
-        i2c_start();
-        i2c_write(OLED_ADDR);
-        i2c_write(0x40); // tryb danych
-        for (uint16_t i = 0; i < 128; i++) i2c_write(0x00);
-        i2c_stop();
-    }
+void buffer_clear() {   //dawne oled clear
+	for (uint16_t i = 0; i < 1024; i++) {
+		buffer[i] = 0x00;
+	}
+}
+//dawne draw
+void draw_to_buffer(uint8_t row, uint8_t col, const uint8_t* data, uint8_t len, uint8_t is_progmem) {
+	if (row > 7 || col > 127) return;
+
+	for (uint8_t i = 0; i < len; i++) {
+		if (col + i > 127) break; // Nie wychodź poza ekran
+
+		uint8_t byte = is_progmem ? pgm_read_byte(&data[i]) : data[i];
+		buffer[(row * 128) + col + i] = byte;
+	}
 }
 
-void draw(const uint8_t* d, uint8_t len) {
-    i2c_start();
-    i2c_write(OLED_ADDR);
-    i2c_write(0x40);
-    for (uint8_t i = 0; i < len; i++) i2c_write(d[i]);
-    i2c_write(0x00);
-    i2c_stop();
-}
 void oled_draw_bitmap(const uint8_t* bitmap) {
 	//horyzontalny
 	send_cmd(0x20); send_cmd(0x00);
@@ -231,33 +250,36 @@ void oled_draw_bitmap(const uint8_t* bitmap) {
 void draw_menu(int8_t state) {
 	static uint8_t logo_shown = 0;
 
+	// 1. Obsługa loga przy starcie
 	if (!logo_shown) {
-		oled_clear();
-		oled_draw_bitmap(epd_bitmap_logo1);
-		_delay_ms(3000);
-		logo_shown = 1; //tylko przy starcie
+		buffer_clear(); // Zerujemy bufor
+		// Kopiujemy bitmapę z Flash do bufora (Macierz B)
+		for (uint16_t i = 0; i < 1024; i++) {
+			buffer[i] = pgm_read_byte(&epd_bitmap_logo1[i]);
+		}
+		update_display(); // Wysyłamy logo na ekran
+		_delay_ms(3000);  // Wyświetlamy przez 3 sekundy
+		logo_shown = 1;
 	}
 
-    oled_clear();
-    // func 1
-    oled_set_cursor(0, 40);
-    draw(font_ON, 9);
-    if(state == 0) { oled_set_cursor(0,20 ); draw(char_ARROW, 5); }
+	// 2. Budowanie obrazu menu w RAM
+	buffer_clear();
 
-    // func 2
-    oled_set_cursor(2, 40);
-    draw(font_OFF, 11);
-    if(state == 1) { oled_set_cursor(2, 20); draw(char_ARROW, 5); }
+	// Pozycje rysujemy bezpośrednio w buforze
+	draw_to_buffer(0, 40, font_ON, 9, 0);
+	if(state == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 
-	oled_set_cursor(4, 40);
-	draw(font_BLINK, 27);
-	if(state == 2) { oled_set_cursor(4, 20); draw(char_ARROW, 5); }
+	draw_to_buffer(2, 40, font_OFF, 11, 0);
+	if(state == 1) draw_to_buffer(2, 20, char_ARROW, 5, 0);
 
-	oled_set_cursor(6, 40);
-	draw(font_PWM, 9);
-	if(state == 3) { oled_set_cursor(6, 20); draw(char_ARROW, 5); }
+	draw_to_buffer(4, 40, font_BLINK, 27, 0);
+	if(state == 2) draw_to_buffer(4, 20, char_ARROW, 5, 0);
 
-    // kolejne...
+	draw_to_buffer(6, 40, font_PWM, 9, 0);
+	if(state == 3) draw_to_buffer(6, 20, char_ARROW, 5, 0);
+
+	// 3. Wysłanie gotowego obrazu na OLED (brak mignięcia!)
+	update_display();
 }
 void draw_from_progmem(const uint8_t* d, uint8_t len) {
 	i2c_start();
@@ -278,55 +300,45 @@ void draw_puste(uint8_t szerokosc) {
 	for (uint8_t i = 0; i < szerokosc; i++) i2c_write(0x00);
 	i2c_stop();
 }
-void rysuj_wartosc_pwm(uint8_t val) {
-	uint8_t s = val / 100;          // Setki
-	uint8_t d = (val / 10) % 10;    // Dziesiątki
-	uint8_t j = val % 10;           // Jedności
+void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
+	uint8_t s = val / 100;
+	uint8_t d = (val / 10) % 10;
+	uint8_t j = val % 10;
 
-	oled_set_cursor(4, 70); // Ustawiamy kursor tam, gdzie ma być liczba
+	// Setki
+	if (s > 0) draw_to_buffer(row, col, cyfry[s], 5, 1);
 
-	// Rysuj setki (tylko jeśli > 0)
-	if (s > 0) {
-		draw_from_progmem(cyfry[s], 5);
-	} else {
-		draw_puste(5); // Przesuń kursor bez rysowania, żeby liczba nie skakała
-	}
+	// Dziesiątki (col + 6 pikseli odstępu)
+	if (s > 0 || d > 0) draw_to_buffer(row, col + 6, cyfry[d], 5, 1);
 
-	// Rysuj dziesiątki (tylko jeśli > 0 lub gdy jest setka)
-	if (s > 0 || d > 0) {
-		draw_from_progmem(cyfry[d], 5);
-	} else {
-		draw_puste(5);
-	}
+	// Jedności (col + 12 pikseli odstępu)
+	draw_to_buffer(row, col + 12, cyfry[j], 5, 1);
 
-	//jednosci zawsze
-	draw_from_progmem(cyfry[j], 5);
-
-	// Znak %
-	draw_puste(2);
-	draw_from_progmem(znak_procent, 5);
+	// Znak % (col + 18 pikseli odstępu)
+	draw_to_buffer(row, col + 18, znak_procent, 5, 1);
 }
 
-void draw_params_menu(int8_t wybrana, int8_t pwm_val, uint8_t edycja, uint8_t sw) {
-	oled_clear();
-	//WSTECZ
-	oled_set_cursor(0, 40);
-	draw_from_progmem(font_WSTECZ, 36);
-	if(wybrana == 0) { oled_set_cursor(0, 20); draw(char_ARROW, 5); }
+void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, uint8_t edycja, uint8_t sw) {
+	buffer_clear();
 
-	//Stan LED (ON/OFF)
-	oled_set_cursor(2, 40); if(sw) draw(font_ON, 9); else draw(font_OFF, 11);
-	if(wybrana == 1) { oled_set_cursor(2, 20); draw(char_ARROW, 5); }
+	// WSTECZ (Page 0)
+	draw_to_buffer(0, 40, font_WSTECZ, 36, 1); // 1, bo PROGMEM
+	if(wybrana == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 
+	// Stan LED (Page 2)
+	if(sw) draw_to_buffer(2, 40, font_ON, 9, 0);
+	else   draw_to_buffer(2, 40, font_OFF, 11, 0);
+	if(wybrana == 1) draw_to_buffer(2, 20, char_ARROW, 5, 0);
 
-	oled_set_cursor(4, 40);
-	rysuj_wartosc_pwm(pwm_val);
+	// PAR1 i wartość PWM (Page 4)
+	draw_to_buffer(4, 40, font_PAR1, 23, 1);
+	rysuj_wartosc_pwm_to_buffer(4, 70, pwm_val);
 
-	oled_set_cursor(4,40);
-	draw_from_progmem(font_PAR1,23);
 	if(wybrana == 2) {
-
-		oled_set_cursor(4, 20);
-		if(edycja) draw(font_ON, 9); else draw(char_ARROW, 5);
+		if(edycja) draw_to_buffer(4, 20, font_ON, 9, 0); // sygnalizacja edycji
+		else       draw_to_buffer(4, 20, char_ARROW, 5, 0);
 	}
+
+	// Wysyłamy wszystko na raz
+	update_display();
 }
