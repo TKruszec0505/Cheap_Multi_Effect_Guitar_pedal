@@ -140,7 +140,7 @@ const uint8_t PROGMEM znak_procent[] = {0x23, 0x13, 0x08, 0x64, 0x62}; // %
 
 // i2c (TWI)
 void i2c_init() {
-    TWBR = 12; // ustawienie zegara SCL 400kHz przy 16MHz
+    TWBR = 72; // ustawienie zegara SCL 400kHz przy 16MHz
     TWCR = (1 << TWEN);
 }
 
@@ -186,8 +186,7 @@ void oled_init() {
 uint8_t buffer[1024];
 
 void update_display() {
-	// Ustawienie adresu na początek (Page Mode)
-	send_cmd(0x20); send_cmd(0x02); // Upewnij się, że jesteś w Page Mode
+	send_cmd(0x20); send_cmd(0x02);
 
 	for (uint8_t page = 0; page < 8; page++) {
 		send_cmd(0xB0 | page); // Ustaw stronę (wiersz)
@@ -237,23 +236,22 @@ void oled_draw_bitmap(const uint8_t* bitmap) {
 
 	i2c_start();
 	i2c_write(OLED_ADDR);
-	i2c_write(0x40); // Tryb danych
+	i2c_write(0x40); //danych
 
 	for (uint16_t i = 0; i < 1024; i++) {
 		i2c_write(pgm_read_byte(&bitmap[i]));
 	}
 	i2c_stop();
 
-	//powrot do Page Mode (zeby oled_set_cursor i draw_menu dzialal)
+
 	send_cmd(0x20); send_cmd(0x02);
 }
 void draw_menu(int8_t state) {
 	static uint8_t logo_shown = 0;
 
-	// 1. Obsługa loga przy starcie
 	if (!logo_shown) {
-		buffer_clear(); // Zerujemy bufor
-		// Kopiujemy bitmapę z Flash do bufora (Macierz B)
+		buffer_clear();
+		// Kopiujemy bitmapę z Flash do bufora
 		for (uint16_t i = 0; i < 1024; i++) {
 			buffer[i] = pgm_read_byte(&epd_bitmap_logo1[i]);
 		}
@@ -262,10 +260,8 @@ void draw_menu(int8_t state) {
 		logo_shown = 1;
 	}
 
-	// 2. Budowanie obrazu menu w RAM
 	buffer_clear();
 
-	// Pozycje rysujemy bezpośrednio w buforze
 	draw_to_buffer(0, 40, font_ON, 9, 0);
 	if(state == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 
@@ -278,7 +274,7 @@ void draw_menu(int8_t state) {
 	draw_to_buffer(6, 40, font_PWM, 9, 0);
 	if(state == 3) draw_to_buffer(6, 20, char_ARROW, 5, 0);
 
-	// 3. Wysłanie gotowego obrazu na OLED (brak mignięcia!)
+
 	update_display();
 }
 void draw_from_progmem(const uint8_t* d, uint8_t len) {
@@ -292,7 +288,6 @@ void draw_from_progmem(const uint8_t* d, uint8_t len) {
 	i2c_stop();
 }
 
-// Rysuje puste miejsce (szerokość w pikselach) - zapobiega "skakaniu" tekstu
 void draw_puste(uint8_t szerokosc) {
 	i2c_start();
 	i2c_write(OLED_ADDR);
@@ -314,31 +309,47 @@ void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	// Jedności (col + 12 pikseli odstępu)
 	draw_to_buffer(row, col + 12, cyfry[j], 5, 1);
 
-	// Znak % (col + 18 pikseli odstępu)
+	//% (col + 18 pikseli odstępu)
 	draw_to_buffer(row, col + 18, znak_procent, 5, 1);
 }
 
-void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, uint8_t edycja, uint8_t sw) {
+void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pwm_val3,
+						uint8_t aktualny_stan, uint8_t sw) {
 	buffer_clear();
 
-	// WSTECZ (Page 0)
-	draw_to_buffer(0, 40, font_WSTECZ, 36, 1); // 1, bo PROGMEM
+	// WSTECZ
+	draw_to_buffer(0, 40, font_WSTECZ, 36, 1);
 	if(wybrana == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 
-	// Stan LED (Page 2)
-	if(sw) draw_to_buffer(2, 40, font_ON, 9, 0);
-	else   draw_to_buffer(2, 40, font_OFF, 11, 0);
-	if(wybrana == 1) draw_to_buffer(2, 20, char_ARROW, 5, 0);
+	// Stan LED
+	if(sw) draw_to_buffer(1, 40, font_ON, 9, 0);
+	else   draw_to_buffer(1, 40, font_OFF, 11, 0);
+	if(wybrana == 1) draw_to_buffer(1, 20, char_ARROW, 5, 0);
 
-	// PAR1 i wartość PWM (Page 4)
-	draw_to_buffer(4, 40, font_PAR1, 23, 1);
-	rysuj_wartosc_pwm_to_buffer(4, 70, pwm_val);
-
+	// PAR1
+	draw_to_buffer(3, 40, font_PAR1, 23, 1);
+	rysuj_wartosc_pwm_to_buffer(3, 70, pwm_val);
 	if(wybrana == 2) {
-		if(edycja) draw_to_buffer(4, 20, font_ON, 9, 0); // sygnalizacja edycji
-		else       draw_to_buffer(4, 20, char_ARROW, 5, 0);
+		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM) draw_to_buffer(3, 20, font_ON, 9, 0);
+		else draw_to_buffer(3, 20, char_ARROW, 5, 0);
 	}
 
-	// Wysyłamy wszystko na raz
+	// PAR2
+	draw_to_buffer(5, 40, font_PAR2, 23, 1);
+	rysuj_wartosc_pwm_to_buffer(5, 70, pwm_val2);
+	if(wybrana == 3) {
+		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2) draw_to_buffer(5, 20, font_ON, 9, 0);
+		else draw_to_buffer(5, 20, char_ARROW, 5, 0);
+	}
+
+	// PAR3
+	draw_to_buffer(7, 40, font_PAR3, 23, 1);
+	rysuj_wartosc_pwm_to_buffer(7, 70, pwm_val3);
+	if(wybrana == 4) {
+		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) draw_to_buffer(7, 20, font_ON, 9, 0);
+		else draw_to_buffer(7, 20, char_ARROW, 5, 0);
+	}
+
 	update_display();
+
 }

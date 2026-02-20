@@ -12,7 +12,11 @@
 typedef enum {
     STAN_MENU_GLOWNE,
     STAN_MENU_PWM,
-    STAN_EDYCJA_WARTOSCI_PWM
+    STAN_MENU_PWM_2,
+    STAN_MENU_PWM_3,
+    STAN_EDYCJA_WARTOSCI_PWM,
+    STAN_EDYCJA_WARTOSCI_PWM2,
+    STAN_EDYCJA_WARTOSCI_PWM3
 } TypStanu;
 
 extern const unsigned char epd_bitmap_logo1[] PROGMEM;
@@ -40,7 +44,10 @@ void draw_from_progmem(const uint8_t* d, uint8_t len);
 void oled_draw_bitmap(const uint8_t* bitmap);
 void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val);
 void draw_menu(int8_t state);
-void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, uint8_t edycja, uint8_t sw);
+
+void draw_params_menu_1(int8_t wybrana, int8_t pwm_val,
+                        int8_t pwm_val2, int8_t pwm_val3,
+                        uint8_t aktualny_stan, uint8_t sw);
 
 extern const uint8_t font_PAR1[] PROGMEM;
 extern const uint8_t font_PAR2[] PROGMEM;

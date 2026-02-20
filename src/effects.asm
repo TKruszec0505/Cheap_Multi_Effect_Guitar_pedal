@@ -8,7 +8,7 @@
 ;no pot controls
 ;output is full reverb, not mixed
 ;22 operations (of 128)
-
+/*
 mem	api1	122
 mem	api2	303
 mem	api3	553
