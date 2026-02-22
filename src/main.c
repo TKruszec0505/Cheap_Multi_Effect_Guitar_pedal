@@ -152,7 +152,7 @@ int main(void) {
                 else if (op_pwm_menu == 3) aktualny_stan = STAN_EDYCJA_WARTOSCI_PWM2;
                 else if (op_pwm_menu == 4) aktualny_stan = STAN_EDYCJA_WARTOSCI_PWM3;
             }
-            // Powrót z edycji do listy parametrów
+            //do listy parametrów
             else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM ||
                      aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2 ||
                      aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) {
@@ -160,7 +160,7 @@ int main(void) {
             }
 
             odswiez = 1;
-            while (!(PIND & (1 << PD6))); //na puszczenie przycisku
+            while (!(PIND & (1 << PD6))); //na puszczenie
         }
 
         if (odswiez) {
