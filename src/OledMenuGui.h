@@ -10,13 +10,26 @@
 #define OLED_ADDR  0x78
 
 typedef enum {
+    //main menu
     STAN_MENU_GLOWNE,
+    PWM5_STATE,                     //VOL
+    PWM5_EDIT_STATE,
+
+    //fx menu
     STAN_MENU_PWM,
-    STAN_MENU_PWM_2,
-    STAN_MENU_PWM_3,
-    STAN_EDYCJA_WARTOSCI_PWM,
-    STAN_EDYCJA_WARTOSCI_PWM2,
-    STAN_EDYCJA_WARTOSCI_PWM3
+    STAN_EDYCJA_WARTOSCI_PWM,       //PAR1
+    STAN_EDYCJA_WARTOSCI_PWM2,      //PAR2
+    STAN_EDYCJA_WARTOSCI_PWM3,      //PAR3
+    PWM4_STATE,                     //DISTORTION GAIN
+    PWM4_EDIT_STATE,                //OUT1: 0/1 OUT2:0/1 OUT3: 0/1
+    PRESET_EDIT_STATE ,
+
+    //modulations menu(lfo,auto pan,...)
+    MOD_MENU_STATE,
+
+    //EQ menu
+    EQ_MENU_STATE
+
 } TypStanu;
 
 extern const unsigned char epd_bitmap_logo1[] PROGMEM;
@@ -47,7 +60,8 @@ void draw_menu(int8_t state);
 
 void draw_params_menu_1(int8_t wybrana, int8_t pwm_val,
                         int8_t pwm_val2, int8_t pwm_val3,
-                        uint8_t aktualny_stan, uint8_t sw);
+                        uint8_t aktualny_stan, uint8_t sw,
+                        uint8_t preset_id);
 
 extern const uint8_t font_PAR1[] PROGMEM;
 extern const uint8_t font_PAR2[] PROGMEM;

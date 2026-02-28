@@ -5,6 +5,11 @@
 
 #define LED_PIN PB1
 
+//for mosfet output config
+#define PRESET_OUT_1 PC0
+#define PRESET_OUT_2 PC1
+#define PRESET_OUT_3 PC2
+
 TypStanu aktualny_stan = STAN_MENU_GLOWNE;
 
 int8_t op_glowne = 0;
@@ -17,6 +22,9 @@ int8_t wartosc_pwm3 = 50;
 uint8_t pwm_aktywne = 0;
 uint8_t pwm_aktywne2 = 0;
 uint8_t pwm_aktywne3 = 0;
+
+int8_t preset_id = 0;
+uint8_t preset_aktywny = 1;
 
 uint8_t odswiez = 1;
 
@@ -37,6 +45,13 @@ void blink() {
         PORTB |= (1 << LED_PIN); _delay_ms(500);
         PORTB &= ~(1 << LED_PIN); _delay_ms(500);
     }
+}
+void set_preset(uint8_t id) {
+    PORTC &= ~((1 << PC0) | (1 << PC1) | (1 << PC2));
+
+    if (id & (1 << 0)) PORTC |= (1 << PC0);
+    if (id & (1 << 1)) PORTC |= (1 << PC1);
+    if (id & (1 << 2)) PORTC |= (1 << PC2);
 }
 
 void setup_pwm() {
@@ -70,11 +85,14 @@ int main(void) {
     DDRD &= ~((1 << PD2) | (1 << PD5) | (1 << PD6));
     PORTD |= (1 << PD2) | (1 << PD5) | (1 << PD6);
 
+    // PPORT C init
+    DDRC |= (1 << PC0) | (1 << PC1) | (1 << PC2);
+
     i2c_init();
     oled_init();
 
 
-    setup_pwm();         // Timer 1 (PAR1, PAR2)
+    setup_pwm();   // Timer 1 (PAR1, PAR2)
     setup_pwm3();  // Timer 2 (PAR3)
 
 
@@ -82,7 +100,7 @@ int main(void) {
 
     uint8_t stan_A_poprzedni = (PIND & (1 << PD2));
 
-    while (1) {
+    while(1) {
         //obrot enkodera
         uint8_t stan_A = (PIND & (1 << PD2));
         if (stan_A != stan_A_poprzedni && stan_A == 0) {
@@ -95,8 +113,8 @@ int main(void) {
             }
             else if (aktualny_stan == STAN_MENU_PWM) {
                 if (w_prawo) op_pwm_menu++; else op_pwm_menu--;
-                if (op_pwm_menu > 4) op_pwm_menu = 0;
-                if (op_pwm_menu < 0) op_pwm_menu = 4;
+                if (op_pwm_menu > 5) op_pwm_menu = 0;
+                if (op_pwm_menu < 0) op_pwm_menu = 5;
             }
             else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM) {
                 if (w_prawo && wartosc_pwm < 100) wartosc_pwm += 5;
@@ -113,6 +131,13 @@ int main(void) {
                 else if (!w_prawo && wartosc_pwm3 > 0) wartosc_pwm3 -= 5;
                 if(pwm_aktywne) aktualizacja_pwm3(wartosc_pwm3);
             }
+            else if (aktualny_stan == PRESET_EDIT_STATE){
+                if (w_prawo) preset_id++; else preset_id--;
+                if (preset_id > 6) preset_id = 0;           //od 0 do 6
+                if (preset_id < 0) preset_id = 6;
+                set_preset(preset_id);
+            }
+
             odswiez = 1;
         }
         stan_A_poprzedni = stan_A;
@@ -142,20 +167,25 @@ int main(void) {
                         aktualizuj_pwm(wartosc_pwm);
                         aktualizacja_pwm2(wartosc_pwm2);
                         aktualizacja_pwm3(wartosc_pwm3);
+                        //set_preset(preset_id);
                     } else {
                         TCCR1A &= ~((1 << COM1A1) | (1 << COM1B1));
                         TCCR2A &= ~(1 << COM2A1);
                         PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB3));
+
                     }
                 }
                 else if (op_pwm_menu == 2) aktualny_stan = STAN_EDYCJA_WARTOSCI_PWM;
                 else if (op_pwm_menu == 3) aktualny_stan = STAN_EDYCJA_WARTOSCI_PWM2;
                 else if (op_pwm_menu == 4) aktualny_stan = STAN_EDYCJA_WARTOSCI_PWM3;
+                else if (op_pwm_menu == 5) aktualny_stan = PRESET_EDIT_STATE;
+
             }
             //do listy parametrów
             else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM ||
                      aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2 ||
-                     aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) {
+                     aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3 ||
+                     aktualny_stan == PRESET_EDIT_STATE) {
                 aktualny_stan = STAN_MENU_PWM;
             }
 
@@ -167,8 +197,9 @@ int main(void) {
             if (aktualny_stan == STAN_MENU_GLOWNE) {
                 draw_menu(op_glowne);
             } else {
-                draw_params_menu_1(op_pwm_menu, wartosc_pwm, wartosc_pwm2,
-                                   wartosc_pwm3, aktualny_stan, pwm_aktywne);
+                draw_params_menu_1(op_pwm_menu, wartosc_pwm,
+                                  wartosc_pwm2,wartosc_pwm3,
+                                   aktualny_stan, pwm_aktywne, preset_id);
             }
             odswiez = 0;
         }
