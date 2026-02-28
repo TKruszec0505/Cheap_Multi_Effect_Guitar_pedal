@@ -80,8 +80,6 @@ const unsigned char epd_bitmap_logo1 [] PROGMEM = {
 };
 
 const uint8_t char_ARROW[]  = {0x08, 0x08, 0x3E, 0x1C, 0x08};
-//const uint8_t ARROW[] = {0x08, 0x1C, 0x3E, 0x08, 0x08};
-//const uint8_t N[]     =                       {0x7F, 0x02, 0x04, 0x08, 0x7F};
 const uint8_t font_ON[]    = {0x3E, 0x41, 0x3E, 0x00, 0x7F, 0x02, 0x04, 0x08, 0x7F}; // ON
 const uint8_t font_OFF[]   = {0x3E, 0x41, 0x3E, 0x00, 0x7F, 0x09, 0x01, 0x00, 0x7F, 0x09, 0x01}; // OFF
 const uint8_t font_BLINK[] = {
@@ -161,7 +159,7 @@ const uint8_t font_reverb_flanger[] PROGMEM = {
 const uint8_t font_reverb_tremolo[] PROGMEM = {
     0x7F, 0x09, 0x19, 0x29, 0x46, 0x00, // R
     0x7F, 0x49, 0x49, 0x41, 0x41, 0x00, // E
-    0x3E, 0x41, 0x41, 0x41, 0x3E, 0x00, // V
+    0x1E, 0x20, 0x40, 0x20, 0x1E, 0x00, // V
     0x00, 0x00, 0x00, // space
     0x01, 0x01, 0x7F, 0x01, 0x01, 0x00, // T
     0x7F, 0x09, 0x19, 0x29, 0x46, 0x00, // R
@@ -194,13 +192,13 @@ const uint8_t font_Pitch_echo[] PROGMEM = {
 const uint8_t font_Reverb1 [] PROGMEM = {
     0x7F, 0x09, 0x19, 0x29, 0x46, 0x00, // R
     0x7F, 0x49, 0x49, 0x41, 0x41, 0x00, // E
-    0x3E, 0x41, 0x41, 0x41, 0x3E, 0x00, // V
+    0x1E, 0x20, 0x40, 0x20, 0x1E, 0x00, // V
     0x00, 0x42, 0x7F, 0x40, 0x00        // 1
 };
 const uint8_t font_Reverb2 [] PROGMEM = {
     0x7F, 0x09, 0x19, 0x29, 0x46, 0x00, // R
     0x7F, 0x49, 0x49, 0x41, 0x41, 0x00, // E
-    0x3E, 0x41, 0x41, 0x41, 0x3E, 0x00, // V
+    0x1E, 0x20, 0x40, 0x20, 0x1E, 0x00, // V
     0x42, 0x61, 0x51, 0x49, 0x46        // 2
 };
 const uint8_t font_FX [] PROGMEM = {
@@ -208,15 +206,17 @@ const uint8_t font_FX [] PROGMEM = {
     0x63, 0x14, 0x08, 0x14, 0x63,       // X
     0x00, 0x24, 0x24, 0x00, 0x00        // :
 };
-const uint8_t* FX_presets[] = {
-    font_reverb_chorus,
-    font_reverb_flanger,
-    font_reverb_tremolo,
-    font_Pitch_shift,
-    font_Pitch_echo,
-    font_Reverb1,
-    font_Reverb2
+
+const FontResource FX_presets[] PROGMEM = {
+	{ font_reverb_chorus, sizeof(font_reverb_chorus) },
+	{ font_reverb_flanger, sizeof(font_reverb_flanger) },
+	{ font_reverb_tremolo, sizeof(font_reverb_tremolo) },
+	{ font_Pitch_shift, sizeof(font_Pitch_shift)},
+	{font_Pitch_echo, sizeof(font_Pitch_echo)},
+	{font_Reverb1, sizeof(font_Reverb1)},
+	{font_Reverb2, sizeof(font_Reverb2)}
 };
+
 const uint8_t PROGMEM znak_procent[] = {0x23, 0x13, 0x08, 0x64, 0x62}; // %
 
 // i2c (TWI)
@@ -283,14 +283,11 @@ void update_display() {
 		i2c_stop();
 	}
 }
-
-
 void buffer_clear() {   //dawne oled clear
 	for (uint16_t i = 0; i < 1024; i++) {
 		buffer[i] = 0x00;
 	}
 }
-//dawne draw
 void draw_to_buffer(uint8_t row, uint8_t col, const uint8_t* data, uint8_t len, uint8_t is_progmem) {
 	if (row > 7 || col > 127) return;
 
@@ -351,14 +348,17 @@ void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	//% (col + 18 pikseli odstępu)
 	draw_to_buffer(row, col + 18, znak_procent, 5, 1);
 }
-void draw_presets_to_buffor(uint8_t row, uint8_t col,uint8_t preset_id){
-	uint8_t preset_state = preset_id % 7; // 0-6
+void draw_presets_to_buffor(uint8_t row, uint8_t col, uint8_t preset_id) {
+	uint8_t preset_state = preset_id % 7;
 
-	const uint8_t* font_ptr = (const uint8_t*)pgm_read_ptr(&(FX_presets[preset_state]));
+	FontResource current_fx;
 
-	draw_to_buffer(row,col,font_ptr,60,1);
+	memcpy_P(&current_fx, &FX_presets[preset_state], sizeof(FontResource));
 
+	draw_to_buffer(row, col, current_fx.data, current_fx.len, 1);
 }
+
+
 
 void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pwm_val3,
 						uint8_t aktualny_stan, uint8_t sw,uint8_t preset_id) {

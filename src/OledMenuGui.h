@@ -32,14 +32,19 @@ typedef enum {
 
 } TypStanu;
 
+typedef struct {
+    const uint8_t* data;
+    uint8_t len;
+} FontResource;
+
+extern const FontResource FX_presets[] PROGMEM;
+
 extern const unsigned char epd_bitmap_logo1[] PROGMEM;
 extern const uint8_t char_ARROW[] ;
 extern const uint8_t font_ON[] ;
 extern const uint8_t font_OFF[] ;
 extern const uint8_t font_WSTECZ[] PROGMEM;
 extern const uint8_t cyfry[10][5] PROGMEM;
-
-const uint8_t* FX_presets[];
 
 void i2c_init(void);
 void i2c_start(void);
