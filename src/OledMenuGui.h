@@ -39,6 +39,8 @@ extern const uint8_t font_OFF[] ;
 extern const uint8_t font_WSTECZ[] PROGMEM;
 extern const uint8_t cyfry[10][5] PROGMEM;
 
+const uint8_t* FX_presets[];
+
 void i2c_init(void);
 void i2c_start(void);
 void i2c_stop(void);
@@ -46,15 +48,12 @@ void i2c_write(uint8_t data);
 
 void send_cmd(uint8_t cmd);
 void oled_init(void);
-void oled_clear(void);
 void buffer_clear();
-void oled_set_cursor(uint8_t row, uint8_t col);
+
 
 void draw_to_buffer(uint8_t row, uint8_t col, const uint8_t* data, uint8_t len, uint8_t is_progmem);
 
-void draw(const uint8_t* d, uint8_t len);
-void draw_from_progmem(const uint8_t* d, uint8_t len);
-void oled_draw_bitmap(const uint8_t* bitmap);
+
 void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val);
 void draw_menu(int8_t state);
 

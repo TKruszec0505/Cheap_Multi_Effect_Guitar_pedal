@@ -177,14 +177,11 @@ const uint8_t font_Pitch_shift[] PROGMEM = {
     0x7F, 0x08, 0x08, 0x08, 0x7F, 0x00, // H
     0x00, 0x00, 0x00,  // space
     0x26, 0x49, 0x49, 0x49, 0x32, 0x00, // S
-    0x7F, 0x08, 0x08, 0x08, 0x7F, 0x00, // H
-    0x00, 0x41, 0x7F, 0x41, 0x00, 0x00, // I
     0x7F, 0x09, 0x09, 0x01, 0x01, 0x00, // F
     0x01, 0x01, 0x7F, 0x01, 0x01, 0x00  // T
 };
 const uint8_t font_Pitch_echo[] PROGMEM = {
     0x7F, 0x09, 0x09, 0x09, 0x06, 0x00, // P
-    0x00, 0x41, 0x7F, 0x41, 0x00, 0x00, // I
     0x01, 0x01, 0x7F, 0x01, 0x01, 0x00, // T
     0x3E, 0x41, 0x41, 0x41, 0x22, 0x00, // C
     0x7F, 0x08, 0x08, 0x08, 0x7F, 0x00, // H
@@ -198,14 +195,12 @@ const uint8_t font_Reverb1 [] PROGMEM = {
     0x7F, 0x09, 0x19, 0x29, 0x46, 0x00, // R
     0x7F, 0x49, 0x49, 0x41, 0x41, 0x00, // E
     0x3E, 0x41, 0x41, 0x41, 0x3E, 0x00, // V
-
     0x00, 0x42, 0x7F, 0x40, 0x00        // 1
 };
 const uint8_t font_Reverb2 [] PROGMEM = {
     0x7F, 0x09, 0x19, 0x29, 0x46, 0x00, // R
     0x7F, 0x49, 0x49, 0x41, 0x41, 0x00, // E
     0x3E, 0x41, 0x41, 0x41, 0x3E, 0x00, // V
-
     0x42, 0x61, 0x51, 0x49, 0x46        // 2
 };
 const uint8_t font_FX [] PROGMEM = {
@@ -289,11 +284,6 @@ void update_display() {
 	}
 }
 
-void oled_set_cursor(uint8_t row, uint8_t col) {
-    send_cmd(0xB0 | row);
-    send_cmd(0x00 | (col & 0x0F));
-    send_cmd(0x10 | (col >> 4));
-}
 
 void buffer_clear() {   //dawne oled clear
 	for (uint16_t i = 0; i < 1024; i++) {
@@ -312,26 +302,6 @@ void draw_to_buffer(uint8_t row, uint8_t col, const uint8_t* data, uint8_t len, 
 	}
 }
 
-void oled_draw_bitmap(const uint8_t* bitmap) {
-	//horyzontalny
-	send_cmd(0x20); send_cmd(0x00);
-
-	//zakres (cały ekran)
-	send_cmd(0x21); send_cmd(0); send_cmd(127); // Kolumny 0-127
-	send_cmd(0x22); send_cmd(0); send_cmd(7);   // Strony 0-7
-
-	i2c_start();
-	i2c_write(OLED_ADDR);
-	i2c_write(0x40); //danych
-
-	for (uint16_t i = 0; i < 1024; i++) {
-		i2c_write(pgm_read_byte(&bitmap[i]));
-	}
-	i2c_stop();
-
-
-	send_cmd(0x20); send_cmd(0x02);
-}
 void draw_menu(int8_t state) {
 	static uint8_t logo_shown = 0;
 
@@ -363,24 +333,7 @@ void draw_menu(int8_t state) {
 
 	update_display();
 }
-void draw_from_progmem(const uint8_t* d, uint8_t len) {
-	i2c_start();
-	i2c_write(OLED_ADDR);
-	i2c_write(0x40);
-	for (uint8_t i = 0; i < len; i++) {
-		i2c_write(pgm_read_byte(&d[i]));
-	}
-	i2c_write(0x00); // Odstęp między znakami
-	i2c_stop();
-}
 
-void draw_puste(uint8_t szerokosc) {
-	i2c_start();
-	i2c_write(OLED_ADDR);
-	i2c_write(0x40);
-	for (uint8_t i = 0; i < szerokosc; i++) i2c_write(0x00);
-	i2c_stop();
-}
 void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	uint8_t s = val / 100;
 	uint8_t d = (val / 10) % 10;
@@ -403,7 +356,7 @@ void draw_presets_to_buffor(uint8_t row, uint8_t col,uint8_t preset_id){
 
 	const uint8_t* font_ptr = (const uint8_t*)pgm_read_ptr(&(FX_presets[preset_state]));
 
-	draw_to_buffer(row,col,font_ptr,50,1);
+	draw_to_buffer(row,col,font_ptr,60,1);
 
 }
 
@@ -446,10 +399,10 @@ void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t 
 
 	//PRESET
 	draw_to_buffer(7,40,font_FX,16,1);
-	draw_presets_to_buffor(7,70,preset_id);
+	draw_presets_to_buffor(7,57,preset_id);
 	if(wybrana == 5){
 		if(aktualny_stan == PRESET_EDIT_STATE) draw_to_buffer(7, 20, font_ON, 9, 0);
-		else draw_to_buffer(7, 20, char_ARROW, 8, 0);
+		else draw_to_buffer(7, 20, char_ARROW, 5, 0);
 	}
 
 	update_display();

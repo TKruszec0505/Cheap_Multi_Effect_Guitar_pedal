@@ -167,7 +167,7 @@ int main(void) {
                         aktualizuj_pwm(wartosc_pwm);
                         aktualizacja_pwm2(wartosc_pwm2);
                         aktualizacja_pwm3(wartosc_pwm3);
-                        //set_preset(preset_id);
+
                     } else {
                         TCCR1A &= ~((1 << COM1A1) | (1 << COM1B1));
                         TCCR2A &= ~(1 << COM2A1);
