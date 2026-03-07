@@ -206,22 +206,38 @@ const uint8_t font_FX [] PROGMEM = {
     0x63, 0x14, 0x08, 0x14, 0x63,       // X
     0x00, 0x24, 0x24, 0x00, 0x00        // :
 };
+const uint8_t font_presets [] PROGMEM = {	//LEN 42
+	0x7F, 0x09, 0x09, 0x09, 0x06, 0x00,		//P
+	0x7F, 0x09, 0x19, 0x29, 0x46, 0x00,		//R
+	0x7F, 0x49, 0x49, 0x41, 0x41, 0x00,		//E
+	0x26, 0x49, 0x49, 0x49, 0x32, 0x00,		//S
+	0x7F, 0x49, 0x49, 0x41, 0x41, 0x00,		//E
+	0x01, 0x01, 0x7F, 0x01, 0x01, 0x00,		//T
+	0x26, 0x49, 0x49, 0x49, 0x32, 0x00,		//S
+};
+
+const uint8_t font_midi [] PROGMEM = {
+	0x7F, 0x02, 0x0C, 0x02, 0x7F, 0x00,
+	0x00, 0x41, 0x7F, 0x41, 0x00, 0x00,
+	0x7F, 0x41, 0x41, 0x22, 0x1C, 0x00,
+	0x00, 0x41, 0x7F, 0x41, 0x00, 0x00,
+};
 
 const FontResource FX_presets[] PROGMEM = {
 	{ font_reverb_chorus, sizeof(font_reverb_chorus) },
 	{ font_reverb_flanger, sizeof(font_reverb_flanger) },
 	{ font_reverb_tremolo, sizeof(font_reverb_tremolo) },
 	{ font_Pitch_shift, sizeof(font_Pitch_shift)},
-	{font_Pitch_echo, sizeof(font_Pitch_echo)},
-	{font_Reverb1, sizeof(font_Reverb1)},
-	{font_Reverb2, sizeof(font_Reverb2)}
+	{ font_Pitch_echo, sizeof(font_Pitch_echo)},
+	{ font_Reverb1, sizeof(font_Reverb1)},
+	{ font_Reverb2, sizeof(font_Reverb2)}
 };
 
 const uint8_t PROGMEM znak_procent[] = {0x23, 0x13, 0x08, 0x64, 0x62}; // %
 
 // i2c (TWI)
 void i2c_init() {
-    TWBR = 72; // ustawienie zegara SCL 400kHz przy 16MHz
+    TWBR = 72; //SCL 400kHz w/16MHz
     TWCR = (1 << TWEN);
 }
 
@@ -244,7 +260,7 @@ void i2c_write(uint8_t data) {
 void send_cmd(uint8_t cmd) {
     i2c_start();
     i2c_write(OLED_ADDR);
-    i2c_write(0x00);               //komendy
+    i2c_write(0x00);               //com
     i2c_write(cmd);
     i2c_stop();
 }
@@ -253,7 +269,7 @@ void oled_init() {
     _delay_ms(10);
     send_cmd(0xAE);                     // Display OFF
     send_cmd(0xD5); send_cmd(0x80);
-    send_cmd(0xA8); send_cmd(0x3F);     // 64 linie
+    send_cmd(0xA8); send_cmd(0x3F);     // 64 lines
     send_cmd(0xD3); send_cmd(0x00);
     send_cmd(0x40);
     send_cmd(0x8D); send_cmd(0x14);     // Charge Pump ON
@@ -324,7 +340,7 @@ void draw_menu(int8_t state) {
 	draw_to_buffer(4, 40, font_BLINK, 27, 0);
 	if(state == 2) draw_to_buffer(4, 20, char_ARROW, 5, 0);
 
-	draw_to_buffer(6, 40, font_PWM, 9, 0);
+	draw_to_buffer(6, 40, font_presets, 42, 1);
 	if(state == 3) draw_to_buffer(6, 20, char_ARROW, 5, 0);
 
 
@@ -360,7 +376,7 @@ void draw_presets_to_buffor(uint8_t row, uint8_t col, uint8_t preset_id) {
 
 
 
-void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pwm_val3,
+void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pwm_val3,
 						uint8_t aktualny_stan, uint8_t sw,uint8_t preset_id) {
 	buffer_clear();
 
@@ -368,7 +384,6 @@ void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t 
 	draw_to_buffer(0, 40, font_WSTECZ, 36, 1);
 	if(wybrana == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 
-	// Stan LED
 	if(sw) draw_to_buffer(1, 40, font_ON, 9, 0);
 	else   draw_to_buffer(1, 40, font_OFF, 11, 0);
 	if(wybrana == 1) draw_to_buffer(1, 20, char_ARROW, 5, 0);
@@ -393,7 +408,7 @@ void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t 
 	draw_to_buffer(5, 40, font_PAR3, 23, 1);
 	rysuj_wartosc_pwm_to_buffer(5, 70, pwm_val3);
 	if(wybrana == 4) {
-		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) draw_to_buffer(7, 20, font_ON, 9, 0);
+		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) draw_to_buffer(5, 20, font_ON, 9, 0);
 		else draw_to_buffer(5, 20, char_ARROW, 5, 0);
 	}
 
@@ -406,5 +421,62 @@ void draw_params_menu_1(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t 
 	}
 
 	update_display();
+
+}
+
+void draw_MIDI_menu(uint8_t wybrana, uint8_t sw) {
+	buffer_clear();
+
+	// WSTECZ
+	draw_to_buffer(0, 40, font_WSTECZ, 36, 1);
+	if(wybrana == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
+
+	if(sw) draw_to_buffer(1, 40, font_ON, 9, 0);
+	else   draw_to_buffer(1, 40, font_OFF, 11, 0);
+	if(wybrana == 1) draw_to_buffer(1, 20, char_ARROW, 5, 0);
+}
+void draw_mod_menu(uint8_t wybrana) {
+	buffer_clear();
+
+	// WSTECZ
+	draw_to_buffer(0, 40, font_WSTECZ, 36, 1);
+	if(wybrana == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
+}
+void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t aktualny_stan) {
+	buffer_clear();
+
+	// WSTECZ
+	draw_to_buffer(0, 40, font_WSTECZ, 36, 1);
+	if(wybrana == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
+
+	//params settings
+	draw_to_buffer(3, 40, font_PAR1, 23, 1);
+	rysuj_wartosc_pwm_to_buffer(3, 70, pwm_val);
+	if(wybrana == 2) {
+		if(aktualny_stan == PWM4_EDIT_STATE) draw_to_buffer(3, 20, font_ON, 9, 0);
+		else draw_to_buffer(3, 20, char_ARROW, 5, 0);
+	}
+
+}
+void draw_distortion_menu(uint8_t wybrana,uint8_t sw,uint8_t aktualny_stan,uint8_t pwm_val){
+
+	buffer_clear();
+
+	// WSTECZ
+	draw_to_buffer(0, 40, font_WSTECZ, 36, 1);
+	if(wybrana == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
+
+	if(sw) draw_to_buffer(1, 40, font_ON, 9, 0);
+	else   draw_to_buffer(1, 40, font_OFF, 11, 0);
+	if(wybrana == 1) draw_to_buffer(1, 20, char_ARROW, 5, 0);
+
+	//params settings
+	draw_to_buffer(3, 40, font_PAR1, 23, 1);
+	rysuj_wartosc_pwm_to_buffer(3, 70, pwm_val);
+
+	if(wybrana == 2) {
+		if(aktualny_stan == PWM4_EDIT_STATE) draw_to_buffer(3, 20, font_ON, 9, 0);
+		else draw_to_buffer(3, 20, char_ARROW, 5, 0);
+	}
 
 }

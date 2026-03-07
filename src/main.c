@@ -14,17 +14,26 @@ TypStanu aktualny_stan = STAN_MENU_GLOWNE;
 
 int8_t op_glowne = 0;
 int8_t op_pwm_menu = 0;
+int8_t op_mod_menu = 0;
+int8_t op_midi_menu = 0;
+int8_t op_eq_menu = 0;
+int8_t op_dst_menu = 0;
 
 int8_t wartosc_pwm = 50;
 int8_t wartosc_pwm2 = 50;
 int8_t wartosc_pwm3 = 50;
 
+int8_t vol_r_lvl = 80;
+int8_t vol_l_lvl = 80;
+
 uint8_t pwm_aktywne = 0;
 uint8_t pwm_aktywne2 = 0;
 uint8_t pwm_aktywne3 = 0;
 
+uint8_t vol_r_active = 0;
+uint8_t vol_l_active = 0;
+
 int8_t preset_id = 0;
-uint8_t preset_aktywny = 1;
 
 uint8_t odswiez = 1;
 
@@ -46,6 +55,24 @@ void blink() {
         PORTB &= ~(1 << LED_PIN); _delay_ms(500);
     }
 }
+
+void setup_vol_stereo() {
+    // TCCR0A: Aktywacja obu kanałów A i B w trybie Fast PWM
+    // COM0A1 (dla Lewego), COM0B1 (dla Prawego)
+    TCCR0A = (1 << COM0A1) | (1 << COM0B1) | (1 << WGM01) | (1 << WGM00);
+
+    // TCCR0B: Ustawienie Preskalera 8
+    TCCR0B = (1 << CS01);
+
+    // Ustawienie pinów PD6 (Lewy) i PD5 (Prawy) jako wyjścia
+    DDRD |= (1 << PD6) | (1 << PD5);
+}
+
+void set_distortion() {
+    TCCR2A |= (1 << COM2B1);
+    DDRD |= (1 << PD3);
+}
+
 void set_preset(uint8_t id) {
     PORTC &= ~((1 << PC0) | (1 << PC1) | (1 << PC2));
 
@@ -76,14 +103,26 @@ void aktualizacja_pwm3(uint8_t v) {
     // ustawienie 8bit
     OCR2A = (uint16_t)(((uint32_t)v * 255) / 100);
 }
+void aktualizuj_vol_l(uint8_t v_l) {
+    OCR0A = (uint8_t)(((uint32_t)v_l * 255) / 100);
+}
+void aktualizuj_vol_r(uint8_t v_r) {
+    OCR0B = (uint8_t)(((uint32_t)v_r * 255) / 100);
+
+}
+void aktualizuj_distortion(uint8_t v) {
+    OCR2B = (uint8_t)(((uint32_t)v * 255) / 100);
+}
+
+//trzeba zmienic piny enkodera(kolidują z pwm)
 
 int main(void) {
     //PWM: PB1 (OC1A), PB2 (OC1B), PB3 (OC2A)
     DDRB |= (1 << PB1) | (1 << PB2) | (1 << PB3);
 
     //enkodera i przycisku (PD2, PD5, PD6) z podciągnięciem
-    DDRD &= ~((1 << PD2) | (1 << PD5) | (1 << PD6));
-    PORTD |= (1 << PD2) | (1 << PD5) | (1 << PD6);
+    DDRD &= ~((1 << PD2) | (1 << PD4) | (1 << PD7));
+    PORTD |= (1 << PD2) | (1 << PD4) | (1 << PD7);
 
     // PPORT C init
     DDRC |= (1 << PC0) | (1 << PC1) | (1 << PC2);
@@ -94,6 +133,7 @@ int main(void) {
 
     setup_pwm();   // Timer 1 (PAR1, PAR2)
     setup_pwm3();  // Timer 2 (PAR3)
+    set_distortion();
 
 
     draw_menu(op_glowne);
@@ -104,13 +144,15 @@ int main(void) {
         //obrot enkodera
         uint8_t stan_A = (PIND & (1 << PD2));
         if (stan_A != stan_A_poprzedni && stan_A == 0) {
-            uint8_t w_prawo = (PIND & (1 << PD5));
+            uint8_t w_prawo = (PIND & (1 << PD4));
 
+            //main menu
             if (aktualny_stan == STAN_MENU_GLOWNE) {
                 if (w_prawo) op_glowne++; else op_glowne--;
                 if (op_glowne > 3) op_glowne = 0;
                 if (op_glowne < 0) op_glowne = 3;
             }
+            //presets menu
             else if (aktualny_stan == STAN_MENU_PWM) {
                 if (w_prawo) op_pwm_menu++; else op_pwm_menu--;
                 if (op_pwm_menu > 5) op_pwm_menu = 0;
@@ -137,17 +179,37 @@ int main(void) {
                 if (preset_id < 0) preset_id = 6;
                 set_preset(preset_id);
             }
+            //EQ-VOL menu
+            else if (aktualny_stan == EQ_MENU_STATE) {
+                if (w_prawo) op_eq_menu++; else op_eq_menu--;
+                if (op_eq_menu > 3) op_eq_menu = 0;
+                if (op_eq_menu < 0) op_eq_menu = 3;
+            }
+            else if (aktualny_stan == PWM5_EDIT_STATE) {
+                if (w_prawo && vol_l_lvl < 100) vol_l_lvl += 5;
+                else if (!w_prawo && vol_l_lvl > 0) vol_l_lvl = 0;
+                if (vol_l_active) aktualizuj_vol_l(vol_l_lvl);
+            }
+            else if (aktualny_stan == PWM6_EDIT_STATE) {
+                if (w_prawo && vol_r_lvl < 100) vol_r_lvl += 5;
+                else if (!w_prawo && vol_r_lvl > 0) vol_r_lvl = 0;
+                if (vol_r_active) aktualizuj_vol_r(vol_r_lvl);
+            }
+            else if (aktualny_stan == PWM7_EDIT_STATE) {}
 
             odswiez = 1;
         }
         stan_A_poprzedni = stan_A;
 
         // pezycisk
-        if (!(PIND & (1 << PD6))) {
+        if (!(PIND & (1 << PD7))) {
             _delay_ms(50); // Debounce
 
             if (aktualny_stan == STAN_MENU_GLOWNE) {
-                if (op_glowne == 0) on();
+                if (op_glowne == 0) {
+                    aktualny_stan = EQ_MENU_STATE;
+                    op_eq_menu = 0;
+                }
                 else if (op_glowne == 1) off();
                 else if (op_glowne == 2) blink();
                 else if (op_glowne == 3) {
@@ -162,8 +224,8 @@ int main(void) {
                 else if (op_pwm_menu == 1) { // ON/OFF dla wszystkich kanałów PWM
                     pwm_aktywne = !pwm_aktywne;
                     if(pwm_aktywne) {
-                        TCCR1A |= (1 << COM1A1) | (1 << COM1B1); // Włącz Timer 1 (A i B)
-                        TCCR2A |= (1 << COM2A1);                 // Włącz Timer 2
+                        TCCR1A |= (1 << COM1A1) | (1 << COM1B1); // Timer 1 (A i B)
+                        TCCR2A |= (1 << COM2A1);                 // Timer 2
                         aktualizuj_pwm(wartosc_pwm);
                         aktualizacja_pwm2(wartosc_pwm2);
                         aktualizacja_pwm3(wartosc_pwm3);
@@ -181,6 +243,7 @@ int main(void) {
                 else if (op_pwm_menu == 5) aktualny_stan = PRESET_EDIT_STATE;
 
             }
+
             //do listy parametrów
             else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM ||
                      aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2 ||
@@ -190,14 +253,14 @@ int main(void) {
             }
 
             odswiez = 1;
-            while (!(PIND & (1 << PD6))); //na puszczenie
+            while (!(PIND & (1 << PD7))); //na puszczenie
         }
 
         if (odswiez) {
             if (aktualny_stan == STAN_MENU_GLOWNE) {
                 draw_menu(op_glowne);
             } else {
-                draw_params_menu_1(op_pwm_menu, wartosc_pwm,
+                draw_params_menu(op_pwm_menu, wartosc_pwm,
                                   wartosc_pwm2,wartosc_pwm3,
                                    aktualny_stan, pwm_aktywne, preset_id);
             }

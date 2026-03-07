@@ -12,23 +12,28 @@
 typedef enum {
     //main menu
     STAN_MENU_GLOWNE,
-    PWM5_STATE,                     //VOL
-    PWM5_EDIT_STATE,
 
-    //fx menu
+    //presets menu
     STAN_MENU_PWM,
     STAN_EDYCJA_WARTOSCI_PWM,       //PAR1
     STAN_EDYCJA_WARTOSCI_PWM2,      //PAR2
     STAN_EDYCJA_WARTOSCI_PWM3,      //PAR3
-    PWM4_STATE,                     //DISTORTION GAIN
-    PWM4_EDIT_STATE,                //OUT1: 0/1 OUT2:0/1 OUT3: 0/1
-    PRESET_EDIT_STATE ,
+    PRESET_EDIT_STATE,
 
     //modulations menu(lfo,auto pan,...)
     MOD_MENU_STATE,
 
     //EQ menu
-    EQ_MENU_STATE
+    EQ_MENU_STATE,
+    PWM5_EDIT_STATE,                //VOL L
+    PWM6_EDIT_STATE,                //VOL R
+    PWM7_EDIT_STATE,                //software eq pwm
+
+    //MIDI MODE MENU
+    MIDI_MENU_STATE,
+
+    DISTROTION_MENU_STATE,
+    PWM4_EDIT_STATE,        //JEDNO PWM DLA OBU KANAŁÓW
 
 } TypStanu;
 
@@ -62,10 +67,11 @@ void draw_to_buffer(uint8_t row, uint8_t col, const uint8_t* data, uint8_t len, 
 void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val);
 void draw_menu(int8_t state);
 
-void draw_params_menu_1(int8_t wybrana, int8_t pwm_val,
+void draw_params_menu(int8_t wybrana, int8_t pwm_val,
                         int8_t pwm_val2, int8_t pwm_val3,
                         uint8_t aktualny_stan, uint8_t sw,
                         uint8_t preset_id);
+void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t aktualny_stan);
 
 extern const uint8_t font_PAR1[] PROGMEM;
 extern const uint8_t font_PAR2[] PROGMEM;
