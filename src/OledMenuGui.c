@@ -230,7 +230,16 @@ const FontResource FX_presets[] PROGMEM = {
 	{ font_Pitch_shift, sizeof(font_Pitch_shift)},
 	{ font_Pitch_echo, sizeof(font_Pitch_echo)},
 	{ font_Reverb1, sizeof(font_Reverb1)},
-	{ font_Reverb2, sizeof(font_Reverb2)}
+	{ font_Reverb2, sizeof(font_Reverb2)},
+	{ font_reverb_chorus, sizeof(font_reverb_chorus) },//
+	{ font_reverb_flanger, sizeof(font_reverb_flanger) },
+	{ font_reverb_tremolo, sizeof(font_reverb_tremolo) },
+	{ font_Pitch_shift, sizeof(font_Pitch_shift)},
+	{ font_Pitch_echo, sizeof(font_Pitch_echo)},
+	{ font_Reverb1, sizeof(font_Reverb1)},
+	{ font_Reverb2, sizeof(font_Reverb2)},
+	{ font_Pitch_echo, sizeof(font_Pitch_echo)}
+
 };
 
 const uint8_t PROGMEM znak_procent[] = {0x23, 0x13, 0x08, 0x64, 0x62}; // %
@@ -365,11 +374,10 @@ void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	draw_to_buffer(row, col + 18, znak_procent, 5, 1);
 }
 void draw_presets_to_buffor(uint8_t row, uint8_t col, uint8_t preset_id) {
-	uint8_t preset_state = preset_id % 7;
 
 	FontResource current_fx;
 
-	memcpy_P(&current_fx, &FX_presets[preset_state], sizeof(FontResource));
+	memcpy_P(&current_fx, &FX_presets[preset_id], sizeof(FontResource));
 
 	draw_to_buffer(row, col, current_fx.data, current_fx.len, 1);
 }
@@ -400,7 +408,7 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pw
 	draw_to_buffer(4, 40, font_PAR2, 23, 1);
 	rysuj_wartosc_pwm_to_buffer(4, 70, pwm_val2);
 	if(wybrana == 3) {
-		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2) draw_to_buffer(5, 20, font_ON, 9, 0);
+		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2) draw_to_buffer(4, 20, font_ON, 9, 0);
 		else draw_to_buffer(4, 20, char_ARROW, 5, 0);
 	}
 

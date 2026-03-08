@@ -9,6 +9,7 @@
 #define PRESET_OUT_1 PC0
 #define PRESET_OUT_2 PC1
 #define PRESET_OUT_3 PC2
+#define PRESET_OUT_4 PC3
 
 TypStanu aktualny_stan = STAN_MENU_GLOWNE;
 
@@ -26,9 +27,9 @@ int8_t wartosc_pwm3 = 50;
 int8_t vol_r_lvl = 80;
 int8_t vol_l_lvl = 80;
 
-uint8_t pwm_aktywne = 0;
-uint8_t pwm_aktywne2 = 0;
-uint8_t pwm_aktywne3 = 0;
+uint8_t pwm_aktywne = 1;
+uint8_t pwm_aktywne2 = 1;
+uint8_t pwm_aktywne3 = 1;
 
 uint8_t vol_r_active = 0;
 uint8_t vol_l_active = 0;
@@ -76,9 +77,10 @@ void set_distortion() {
 void set_preset(uint8_t id) {
     PORTC &= ~((1 << PC0) | (1 << PC1) | (1 << PC2));
 
-    if (id & (1 << 0)) PORTC |= (1 << PC0);
-    if (id & (1 << 1)) PORTC |= (1 << PC1);
-    if (id & (1 << 2)) PORTC |= (1 << PC2);
+    uint8_t fixed_id = id % 7;
+    if (~fixed_id & (1 << 0)) PORTC |= (1 << PC0);
+    if (~fixed_id & (1 << 1)) PORTC |= (1 << PC1);
+    if (~fixed_id & (1 << 2)) PORTC |= (1 << PC2);
 }
 
 void setup_pwm() {
@@ -125,7 +127,7 @@ int main(void) {
     PORTD |= (1 << PD2) | (1 << PD4) | (1 << PD7);
 
     // PPORT C init
-    DDRC |= (1 << PC0) | (1 << PC1) | (1 << PC2);
+    DDRC |= (1 << PC0) | (1 << PC1) | (1 << PC2) | (1 << PC3);
 
     i2c_init();
     oled_init();
@@ -135,8 +137,11 @@ int main(void) {
     setup_pwm3();  // Timer 2 (PAR3)
     set_distortion();
 
+    PORTC |=  (1 << PRESET_OUT_4);
+    set_preset(0);
 
     draw_menu(op_glowne);
+
 
     uint8_t stan_A_poprzedni = (PIND & (1 << PD2));
 
@@ -175,8 +180,10 @@ int main(void) {
             }
             else if (aktualny_stan == PRESET_EDIT_STATE){
                 if (w_prawo) preset_id++; else preset_id--;
-                if (preset_id > 6) preset_id = 0;           //od 0 do 6
-                if (preset_id < 0) preset_id = 6;
+                if (preset_id > 14) preset_id = 0;           //od 0 do 6(PORTB |= (1 << PRESET_OUT_4)
+                if (preset_id < 0) preset_id = 14;
+                if (preset_id > 6) (PORTC &= ~(1 << PRESET_OUT_4));
+                else (PORTC |=  (1 << PRESET_OUT_4));
                 set_preset(preset_id);
             }
             //EQ-VOL menu
