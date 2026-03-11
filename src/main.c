@@ -20,9 +20,9 @@ int8_t op_midi_menu = 0;
 int8_t op_eq_menu = 0;
 int8_t op_dst_menu = 0;
 
-int8_t wartosc_pwm = 50;
-int8_t wartosc_pwm2 = 50;
-int8_t wartosc_pwm3 = 50;
+int8_t wartosc_pwm = 80;
+int8_t wartosc_pwm2 = 80;
+int8_t wartosc_pwm3 = 80;
 
 int8_t vol_r_lvl = 80;
 int8_t vol_l_lvl = 80;
@@ -34,7 +34,7 @@ uint8_t pwm_aktywne3 = 1;
 uint8_t vol_r_active = 0;
 uint8_t vol_l_active = 0;
 
-int8_t preset_id = 0;
+int8_t preset_id = 4;       //4 bc its bypass(test fv-1 program)
 
 uint8_t odswiez = 1;
 
@@ -77,32 +77,44 @@ void set_distortion() {
 void set_preset(uint8_t id) {
     PORTC &= ~((1 << PC0) | (1 << PC1) | (1 << PC2));
 
-    uint8_t fixed_id = id % 7;
+    uint8_t fixed_id = id % 8;
     if (~fixed_id & (1 << 0)) PORTC |= (1 << PC0);
     if (~fixed_id & (1 << 1)) PORTC |= (1 << PC1);
     if (~fixed_id & (1 << 2)) PORTC |= (1 << PC2);
 }
 
 void setup_pwm() {
-    // PWM 10-bit, Prescaler 8
-    TCCR1A = (1 << WGM11) | (1 << WGM10);
-    TCCR1B = (1 << WGM12) | (1 << CS11);
+    // TIMER1
+    // WGM12 = 1 i WGM10 = 1  -> FAST PWM, 8-bit (TOP = 255)
+    // CS10 = 1               -> Prescaler 1
+    TCCR1A = (1 << WGM10);
+    TCCR1B = (1 << WGM12) | (1 << CS10);
+
+    // TIMER2
+    // WGM21 = 1 i WGM20 = 1  -> FAST PWM, 8-bit (TOP = 255)
+    // CS20 = 1               -> Prescaler 1
+    TCCR2A = (1 << WGM21) | (1 << WGM20);
+    TCCR2B = (1 << CS20);
+
+    DDRB |= (1 << PB1) | (1 << PB2) | (1 << PB3);
 }
+
 void setup_pwm3() {
     TCCR2A = (1 << COM2A1) | (1 << WGM21) | (1 << WGM20);
-    TCCR2B = (1 << CS21); // Prescaler 8
-    DDRB |= (1 << PB3);   //PB3 jako wyjście
+    TCCR2B = (1 << CS20); // CS20 = Prescaler 1
+    DDRB |= (1 << PB3);
+    // freq: 16MHz / 256 = 62.5 kHz (input rezonator freq/1*bits)
 }
 
 void aktualizuj_pwm(uint8_t v) {
 
-    OCR1A = (uint16_t)(((uint32_t)v * 1023) / 100);
+    OCR1A = (uint16_t)(((uint32_t)v * 255) / 100);
 }
 void aktualizacja_pwm2(uint8_t v) {
-    OCR1B = (uint16_t)(((uint32_t)v * 1023) / 100);
+    OCR1B = (uint16_t)(((uint32_t)v * 255) / 100);
 }
 void aktualizacja_pwm3(uint8_t v) {
-    // ustawienie 8bit
+    //8bit
     OCR2A = (uint16_t)(((uint32_t)v * 255) / 100);
 }
 void aktualizuj_vol_l(uint8_t v_l) {
@@ -138,16 +150,16 @@ int main(void) {
     set_distortion();
 
     PORTC |=  (1 << PRESET_OUT_4);
-    set_preset(0);
+    set_preset(4);
 
     draw_menu(op_glowne);
 
 
-    uint8_t stan_A_poprzedni = (PIND & (1 << PD2));
+    uint8_t stan_A_poprzedni = (PIND & (1 << PD7));
 
     while(1) {
         //obrot enkodera
-        uint8_t stan_A = (PIND & (1 << PD2));
+        uint8_t stan_A = (PIND & (1 << PD7));
         if (stan_A != stan_A_poprzedni && stan_A == 0) {
             uint8_t w_prawo = (PIND & (1 << PD4));
 
@@ -180,9 +192,9 @@ int main(void) {
             }
             else if (aktualny_stan == PRESET_EDIT_STATE){
                 if (w_prawo) preset_id++; else preset_id--;
-                if (preset_id > 14) preset_id = 0;           //od 0 do 6(PORTB |= (1 << PRESET_OUT_4)
-                if (preset_id < 0) preset_id = 14;
-                if (preset_id > 6) (PORTC &= ~(1 << PRESET_OUT_4));
+                if (preset_id > 15) preset_id = 0;           //0-15(16 presets)
+                if (preset_id < 0) preset_id = 15;
+                if (preset_id > 7) (PORTC &= ~(1 << PRESET_OUT_4));     //0-7 from ROM 8-15 EEPROM(we are switching T1)
                 else (PORTC |=  (1 << PRESET_OUT_4));
                 set_preset(preset_id);
             }
@@ -209,7 +221,7 @@ int main(void) {
         stan_A_poprzedni = stan_A;
 
         // pezycisk
-        if (!(PIND & (1 << PD7))) {
+        if (!(PIND & (1 << PD2))) {
             _delay_ms(50); // Debounce
 
             if (aktualny_stan == STAN_MENU_GLOWNE) {
@@ -260,7 +272,7 @@ int main(void) {
             }
 
             odswiez = 1;
-            while (!(PIND & (1 << PD7))); //na puszczenie
+            while (!(PIND & (1 << PD2))); //na puszczenie
         }
 
         if (odswiez) {

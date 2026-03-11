@@ -222,15 +222,28 @@ const uint8_t font_midi [] PROGMEM = {
 	0x7F, 0x41, 0x41, 0x22, 0x1C, 0x00,
 	0x00, 0x41, 0x7F, 0x41, 0x00, 0x00,
 };
+const uint8_t font_bypass[] PROGMEM = {
+	0x7F, 0x49, 0x49, 0x41, 0x36, 0x00,
+	0x03, 0x04, 0x78, 0x04, 0x03, 0x00,
+	0x7F, 0x09, 0x09, 0x09, 0x06, 0x00,
+	0x7E, 0x11, 0x11, 0x11, 0x7E, 0x00,
+	0x26, 0x49, 0x49, 0x49, 0x32, 0x00,
+	0x26, 0x49, 0x49, 0x49, 0x32, 0x00
+};
+const uint8_t font_minus[] PROGMEM = {
+	0x08, 0x08, 0x08, 0x08, 0x08, 0x00
+};
 
 const FontResource FX_presets[] PROGMEM = {
 	{ font_reverb_chorus, sizeof(font_reverb_chorus) },
 	{ font_reverb_flanger, sizeof(font_reverb_flanger) },
 	{ font_reverb_tremolo, sizeof(font_reverb_tremolo) },
 	{ font_Pitch_shift, sizeof(font_Pitch_shift)},
+	{ font_bypass, sizeof(font_bypass)},
 	{ font_Pitch_echo, sizeof(font_Pitch_echo)},
 	{ font_Reverb1, sizeof(font_Reverb1)},
 	{ font_Reverb2, sizeof(font_Reverb2)},
+
 	{ font_reverb_chorus, sizeof(font_reverb_chorus) },//
 	{ font_reverb_flanger, sizeof(font_reverb_flanger) },
 	{ font_reverb_tremolo, sizeof(font_reverb_tremolo) },
@@ -382,8 +395,6 @@ void draw_presets_to_buffor(uint8_t row, uint8_t col, uint8_t preset_id) {
 	draw_to_buffer(row, col, current_fx.data, current_fx.len, 1);
 }
 
-
-
 void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pwm_val3,
 						uint8_t aktualny_stan, uint8_t sw,uint8_t preset_id) {
 	buffer_clear();
@@ -395,29 +406,48 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pw
 	if(sw) draw_to_buffer(1, 40, font_ON, 9, 0);
 	else   draw_to_buffer(1, 40, font_OFF, 11, 0);
 	if(wybrana == 1) draw_to_buffer(1, 20, char_ARROW, 5, 0);
+	if (preset_id == 4) {
+		draw_to_buffer(3, 40, font_PAR1, 23, 1);
+		draw_to_buffer(3, 70, font_minus, 6, 1);
+		if (wybrana == 2) {
+			draw_to_buffer(3, 20, char_ARROW, 5, 0);
+		}
 
-	// PAR1
-	draw_to_buffer(3, 40, font_PAR1, 23, 1);
-	rysuj_wartosc_pwm_to_buffer(3, 70, pwm_val);
-	if(wybrana == 2) {
-		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM) draw_to_buffer(3, 20, font_ON, 9, 0);
-		else draw_to_buffer(3, 20, char_ARROW, 5, 0);
-	}
+		draw_to_buffer(4, 40, font_PAR2, 23, 1);
+		draw_to_buffer(4, 70, font_minus, 6, 1);
+		if (wybrana == 3) {
+			draw_to_buffer(4, 20, char_ARROW, 5, 0);
+		}
 
-	// PAR2
-	draw_to_buffer(4, 40, font_PAR2, 23, 1);
-	rysuj_wartosc_pwm_to_buffer(4, 70, pwm_val2);
-	if(wybrana == 3) {
-		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2) draw_to_buffer(4, 20, font_ON, 9, 0);
-		else draw_to_buffer(4, 20, char_ARROW, 5, 0);
-	}
+		draw_to_buffer(5, 40, font_PAR3, 23, 1);
+		draw_to_buffer(5, 70, font_minus, 6, 1);
+		if (wybrana == 4) {
+			draw_to_buffer(5, 20, char_ARROW, 5, 0);
+		}
+	} else {
+		// PAR1
+		draw_to_buffer(3, 40, font_PAR1, 23, 1);
+		rysuj_wartosc_pwm_to_buffer(3, 70, pwm_val);
+		if(wybrana == 2) {
+			if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM) draw_to_buffer(3, 20, font_ON, 9, 0);
+			else draw_to_buffer(3, 20, char_ARROW, 5, 0);
+		}
 
-	// PAR3
-	draw_to_buffer(5, 40, font_PAR3, 23, 1);
-	rysuj_wartosc_pwm_to_buffer(5, 70, pwm_val3);
-	if(wybrana == 4) {
-		if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) draw_to_buffer(5, 20, font_ON, 9, 0);
-		else draw_to_buffer(5, 20, char_ARROW, 5, 0);
+		// PAR2
+		draw_to_buffer(4, 40, font_PAR2, 23, 1);
+		rysuj_wartosc_pwm_to_buffer(4, 70, pwm_val2);
+		if(wybrana == 3) {
+			if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2) draw_to_buffer(4, 20, font_ON, 9, 0);
+			else draw_to_buffer(4, 20, char_ARROW, 5, 0);
+		}
+
+		// PAR3
+		draw_to_buffer(5, 40, font_PAR3, 23, 1);
+		rysuj_wartosc_pwm_to_buffer(5, 70, pwm_val3);
+		if(wybrana == 4) {
+			if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) draw_to_buffer(5, 20, font_ON, 9, 0);
+			else draw_to_buffer(5, 20, char_ARROW, 5, 0);
+		}
 	}
 
 	//PRESET
