@@ -239,8 +239,8 @@ const FontResource FX_presets[] PROGMEM = {
 	{ font_reverb_flanger, sizeof(font_reverb_flanger) },
 	{ font_reverb_tremolo, sizeof(font_reverb_tremolo) },
 	{ font_Pitch_shift, sizeof(font_Pitch_shift)},
-	{ font_bypass, sizeof(font_bypass)},
 	{ font_Pitch_echo, sizeof(font_Pitch_echo)},
+	{ font_bypass, sizeof(font_bypass)},
 	{ font_Reverb1, sizeof(font_Reverb1)},
 	{ font_Reverb2, sizeof(font_Reverb2)},
 
@@ -406,7 +406,7 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pw
 	if(sw) draw_to_buffer(1, 40, font_ON, 9, 0);
 	else   draw_to_buffer(1, 40, font_OFF, 11, 0);
 	if(wybrana == 1) draw_to_buffer(1, 20, char_ARROW, 5, 0);
-	if (preset_id == 4) {
+	if (preset_id == 5) {
 		draw_to_buffer(3, 40, font_PAR1, 23, 1);
 		draw_to_buffer(3, 70, font_minus, 6, 1);
 		if (wybrana == 2) {

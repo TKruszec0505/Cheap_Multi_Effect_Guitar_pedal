@@ -34,7 +34,7 @@ uint8_t pwm_aktywne3 = 1;
 uint8_t vol_r_active = 0;
 uint8_t vol_l_active = 0;
 
-int8_t preset_id = 4;       //4 bc its bypass(test fv-1 program)
+int8_t preset_id = 5;       //4 bc its bypass(test fv-1 program)
 
 uint8_t odswiez = 1;
 
@@ -150,7 +150,9 @@ int main(void) {
     set_distortion();
 
     PORTC |=  (1 << PRESET_OUT_4);
-    set_preset(4);
+    set_preset(5);
+
+    pwm_aktywne = 1;
 
     draw_menu(op_glowne);
 
