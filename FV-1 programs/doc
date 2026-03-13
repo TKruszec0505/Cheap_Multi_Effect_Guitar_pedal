@@ -1,4 +1,5 @@
 1. Program/presets list:
+
 ROM 0: chorus reverb
 ROM 1: flange-reverb
 ROM 2: tremolo-reverb
@@ -24,9 +25,14 @@ The ROM-EEPROM change is fully automatated by atmega and its interfaces. When in
 is greater than 7 its instantly switch mosfet connected to T0 fv-1 pin.
 
 2. EEPROM
-I dont have EEPROM programmer so i flashed every byte with python and arduino.
-both WriteToEEPROM.py and .cpp are for that matter. arduino is interface and python is to load and push programs.
 
+I dont have EEPROM programmer so i flashed every byte with python and arduino.
+Both WriteToEEPROM.py and .cpp are for that matter. arduino is interface and python is to load and push programs.
+Both SpinASM and SpinCAD Designer will compile hex files so to write to eeprom you must first convert that to bin.
+I recommend using IntelHex module tobinfile function, I did it before writing to EEPROM but you can do this in just
+one script as well.
+If you dont have any programs on your own you can create a bank of presets with already existing presets and compile
+them together in SpinASM IDE if preset is .spn or SpinCAD Designer if .spcd/.spbk
 
 3. Writing programs
 
@@ -36,5 +42,5 @@ structures that easily, so I recommend using SpinCAD at the beginning. I didn't 
 to be honest, and was interested in learning ASM anyway, so I chose the harder path,
 I guess. In other words, if you just want to make a cheap multi-effect to play around,
 go for SpinCAD, but if you are into DSP, low-level programming, or electronics,
-you should choose ASM.
+you should chose ASM.
 

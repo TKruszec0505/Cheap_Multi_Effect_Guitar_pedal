@@ -103,7 +103,7 @@ void setup_pwm3() {
     TCCR2A = (1 << COM2A1) | (1 << WGM21) | (1 << WGM20);
     TCCR2B = (1 << CS20); // CS20 = Prescaler 1
     DDRB |= (1 << PB3);
-    // freq: 16MHz / 256 = 62.5 kHz (input rezonator freq/1*bits)
+    // freq: 16MHz / 256 = 62.5 kHz (input rezonator freq/Prescaler*bits)
 }
 
 void aktualizuj_pwm(uint8_t v) {
