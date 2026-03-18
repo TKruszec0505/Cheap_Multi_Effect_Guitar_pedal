@@ -1,0 +1,61 @@
+1. Modules
+
+We can categorise this effect into smoler sub-systems or sub-circuits to get
+better understanding of how this thing works.
+
+I will be naming this modules:
+1.2 - power supply and power filtering
+1.3 - ATMega interfaces
+1.4 - FV1 circuit
+1.5 - input stage
+1.6 - output stage
+1.7 - analog distortion
+1.8 - analog audio filtering
+1.9 - MIDI connection
+
+1.1 Opening thoughts
+
+This modules are really different in size and functionality ranging from small
+analog additions to maximize user experience within limited capabilities of this system
+and budget, to core aspects like atmega interfaces and FV1 DSP circuit.
+
+Effect is optimised for MIDI automation mainly, it means that its design to use it as live performance
+processor to program entire concert within your DAW and send it to device in real time. You can adjust presets
+and parameters not only in digital domain, all analog effects like distortion, leveling and EQ will be manageable
+through digital interfaces, so you can adjust everything form Oled GUI or MIDI with old-school sounding distortion
+for example.
+
+Although I am trying to solve and add stuff sometimes there are things that I cant simply resolve.
+Best example is instant cut when we switch effects. Its major problem when you are switching
+from long delays or reverbs to other effects. You can try to overcome this problem with MIDI automation
+in your DAW but I cannot guarantee you will be happy whit it. Its FV1 design that gets in the way of such things
+because suddenly this processor cannot be program as it is but rather it reads programs from eeprom.
+We can use STM32 next time for both interface and DSP but it would not be that cheap, more about it latter.
+
+1.2 Power supply and power filtering
+
+System is powered by 9V charger to match industry standard. I suggest to invest some money into it
+because with poorly made charger our audio will not be pure, I'm trying to overcome this with use
+of different filters but its safe to assume that with better quality charger your audio will be better.
+Noise will not only be from your power supply tho, it could be made with poor design decisions.
+
+We should:
+-separate the grounds to avoid ground loops.
+-make sure that our stabilizers are 5V for atmega and its interfaces and 3.3V for FV1 circuit
+and that they are working correctly.
+-filter using electrolytic and ceramic capacitors Oled and atmega since they are noise sources,
+we should do that as close as possible to them.
+-since we using pwm to adjust parameters we need strong filters and dividers to connect to FV1.
+
+1.3 ATMega interfaces
+
+1.4 FV1 circuit
+There are many alternatives that are better then this chip but within this price range nothing can compete.
+24bit adcs and dacs alone cost more then this processor. This is nowhere near to flexibility of STM32 or
+other MCU capable of DSP and that is drawback that cant be ignored as i mention earlier that cut off thing
+but we cannot deny high audio quality. Documentation is simple to understand with clear typical application schematic
+that after certain modification I used.
+
+
+
+

@@ -27,7 +27,7 @@ typedef enum {
     EQ_MENU_STATE,
     PWM5_EDIT_STATE,                //VOL L
     PWM6_EDIT_STATE,                //VOL R
-    PWM7_EDIT_STATE,                //software eq pwm
+    PWM7_EDIT_STATE,                //eq pwm
 
     //MIDI MODE MENU
     MIDI_MENU_STATE,
@@ -71,7 +71,8 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val,
                         int8_t pwm_val2, int8_t pwm_val3,
                         uint8_t aktualny_stan, uint8_t sw,
                         uint8_t preset_id);
-void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t aktualny_stan);
+void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t pwm_val2,uint8_t pwm_val3, uint8_t aktualny_stan);
+
 
 extern const uint8_t font_PAR1[] PROGMEM;
 extern const uint8_t font_PAR2[] PROGMEM;

@@ -233,6 +233,14 @@ const uint8_t font_bypass[] PROGMEM = {
 const uint8_t font_minus[] PROGMEM = {
 	0x08, 0x08, 0x08, 0x08, 0x08, 0x00
 };
+const uint8_t font_vol_eq[] PROGMEM = {
+	0x1E, 0x20, 0x40, 0x20, 0x1E, 0x00,
+	0x3E, 0x41, 0x41, 0x41, 0x3E, 0x00,
+	0x7F, 0x40, 0x40, 0x40, 0x40, 0x00,
+	0x32, 0x4D, 0x51, 0x22, 0x54, 0x00,
+	0x7F, 0x49, 0x49, 0x49, 0x41, 0x00,
+	0x3E, 0x41, 0x51, 0x21, 0x5E, 0x00
+};
 
 const FontResource FX_presets[] PROGMEM = {
 	{ font_reverb_chorus, sizeof(font_reverb_chorus) },
@@ -353,7 +361,7 @@ void draw_menu(int8_t state) {
 
 	buffer_clear();
 
-	draw_to_buffer(0, 40, font_ON, 9, 0);
+	draw_to_buffer(0, 40, font_vol_eq, 36, 0);
 	if(state == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 
 	draw_to_buffer(2, 40, font_OFF, 11, 0);
@@ -480,7 +488,7 @@ void draw_mod_menu(uint8_t wybrana) {
 	draw_to_buffer(0, 40, font_WSTECZ, 36, 1);
 	if(wybrana == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 }
-void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t aktualny_stan) {
+void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t pwm_val2,uint8_t pwm_val3, uint8_t aktualny_stan) {
 	buffer_clear();
 
 	// WSTECZ
@@ -490,11 +498,23 @@ void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t aktualny_stan) {
 	//params settings
 	draw_to_buffer(3, 40, font_PAR1, 23, 1);
 	rysuj_wartosc_pwm_to_buffer(3, 70, pwm_val);
-	if(wybrana == 2) {
-		if(aktualny_stan == PWM4_EDIT_STATE) draw_to_buffer(3, 20, font_ON, 9, 0);
+	if(wybrana == 1) {	//vol l
+		if(aktualny_stan == PWM5_EDIT_STATE) draw_to_buffer(3, 20, font_ON, 9, 0);
 		else draw_to_buffer(3, 20, char_ARROW, 5, 0);
 	}
-
+	draw_to_buffer(4, 40, font_PAR1, 23, 1);
+	rysuj_wartosc_pwm_to_buffer(4, 70, pwm_val2);
+	if (wybrana == 2) { // vol r
+		if (aktualny_stan == PWM6_EDIT_STATE) draw_to_buffer(4, 20, font_ON, 9, 0);
+		else draw_to_buffer(4, 20, char_ARROW, 5, 0);
+	}
+	draw_to_buffer(5, 40, font_PAR1, 23, 1);
+	rysuj_wartosc_pwm_to_buffer(5, 70, pwm_val3);
+	if (wybrana == 3) { // eq
+		if (aktualny_stan == PWM7_EDIT_STATE) draw_to_buffer(5, 20, font_ON, 9, 0);
+		else draw_to_buffer(5, 20, char_ARROW, 5, 0);
+	}
+	update_display();
 }
 void draw_distortion_menu(uint8_t wybrana,uint8_t sw,uint8_t aktualny_stan,uint8_t pwm_val){
 

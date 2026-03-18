@@ -26,6 +26,7 @@ int8_t wartosc_pwm3 = 80;
 
 int8_t vol_r_lvl = 80;
 int8_t vol_l_lvl = 80;
+int8_t eq_lvl = 80;
 
 uint8_t pwm_aktywne = 1;
 uint8_t pwm_aktywne2 = 1;
@@ -33,6 +34,7 @@ uint8_t pwm_aktywne3 = 1;
 
 uint8_t vol_r_active = 0;
 uint8_t vol_l_active = 0;
+uint8_t eq_active = 1;
 
 int8_t preset_id = 5;       //4 bc its bypass(test fv-1 program)
 
@@ -69,7 +71,7 @@ void setup_vol_stereo() {
     DDRD |= (1 << PD6) | (1 << PD5);
 }
 
-void set_distortion() {
+void set_EQ() {
     TCCR2A |= (1 << COM2B1);
     DDRD |= (1 << PD3);
 }
@@ -124,7 +126,7 @@ void aktualizuj_vol_r(uint8_t v_r) {
     OCR0B = (uint8_t)(((uint32_t)v_r * 255) / 100);
 
 }
-void aktualizuj_distortion(uint8_t v) {
+void aktualizuj_eq(uint8_t v) {
     OCR2B = (uint8_t)(((uint32_t)v * 255) / 100);
 }
 
@@ -147,7 +149,7 @@ int main(void) {
 
     setup_pwm();   // Timer 1 (PAR1, PAR2)
     setup_pwm3();  // Timer 2 (PAR3)
-    set_distortion();
+    set_EQ();
 
     PORTC |=  (1 << PRESET_OUT_4);
     set_preset(5);
@@ -208,15 +210,19 @@ int main(void) {
             }
             else if (aktualny_stan == PWM5_EDIT_STATE) {
                 if (w_prawo && vol_l_lvl < 100) vol_l_lvl += 5;
-                else if (!w_prawo && vol_l_lvl > 0) vol_l_lvl = 0;
+                else if (!w_prawo && vol_l_lvl > 0) vol_l_lvl -= 5;
                 if (vol_l_active) aktualizuj_vol_l(vol_l_lvl);
             }
             else if (aktualny_stan == PWM6_EDIT_STATE) {
                 if (w_prawo && vol_r_lvl < 100) vol_r_lvl += 5;
-                else if (!w_prawo && vol_r_lvl > 0) vol_r_lvl = 0;
+                else if (!w_prawo && vol_r_lvl > 0) vol_r_lvl -= 5;
                 if (vol_r_active) aktualizuj_vol_r(vol_r_lvl);
             }
-            else if (aktualny_stan == PWM7_EDIT_STATE) {}
+            else if (aktualny_stan == PWM7_EDIT_STATE) {
+                if (w_prawo && eq_lvl < 100) eq_lvl += 5;
+                else if (!w_prawo && eq_lvl > 0) eq_lvl -= 5;
+                if (eq_active) aktualizuj_eq(eq_lvl);
+            }
 
             odswiez = 1;
         }
@@ -238,6 +244,7 @@ int main(void) {
                     op_pwm_menu = 0;
                 }
             }
+            //funkcjonalnosci menu parametrow
             else if (aktualny_stan == STAN_MENU_PWM) {
                 if (op_pwm_menu == 0) { // wstecz
                     aktualny_stan = STAN_MENU_GLOWNE;
@@ -264,6 +271,19 @@ int main(void) {
                 else if (op_pwm_menu == 5) aktualny_stan = PRESET_EDIT_STATE;
 
             }
+            //funkcjonalnosci  menu eq
+            else if (aktualny_stan == EQ_MENU_STATE) {
+                if (op_eq_menu == 0) {  //wstecz
+                    aktualny_stan = STAN_MENU_GLOWNE;
+                }
+                else if (op_eq_menu == 1) aktualny_stan = PWM5_EDIT_STATE;
+                else if (op_eq_menu == 2) aktualny_stan = PWM6_EDIT_STATE;
+                else if (op_eq_menu == 3) aktualny_stan = PWM7_EDIT_STATE;
+                aktualizuj_vol_l(vol_l_lvl);
+                aktualizuj_vol_r(vol_r_lvl);
+                aktualizuj_eq(eq_lvl);
+
+            }
 
             //do listy parametrów
             else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM ||
@@ -271,6 +291,10 @@ int main(void) {
                      aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3 ||
                      aktualny_stan == PRESET_EDIT_STATE) {
                 aktualny_stan = STAN_MENU_PWM;
+            } else if (aktualny_stan == PWM5_EDIT_STATE ||
+                aktualny_stan == PWM6_EDIT_STATE ||
+                aktualny_stan == PWM7_EDIT_STATE) {
+                aktualny_stan = EQ_MENU_STATE;
             }
 
             odswiez = 1;
@@ -278,14 +302,28 @@ int main(void) {
         }
 
         if (odswiez) {
+
             if (aktualny_stan == STAN_MENU_GLOWNE) {
                 draw_menu(op_glowne);
-            } else {
-                draw_params_menu(op_pwm_menu, wartosc_pwm,
-                                  wartosc_pwm2,wartosc_pwm3,
-                                   aktualny_stan, pwm_aktywne, preset_id);
             }
+
+            else if (aktualny_stan == STAN_MENU_PWM ||
+                         aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM ||
+                         aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2 ||
+                         aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3 ||
+                         aktualny_stan == PRESET_EDIT_STATE) {
+                draw_params_menu(op_pwm_menu, wartosc_pwm, wartosc_pwm2, wartosc_pwm3,
+                    aktualny_stan, pwm_aktywne, preset_id);
+                         }
+
+            else if (aktualny_stan == EQ_MENU_STATE ||
+                         aktualny_stan == PWM5_EDIT_STATE ||
+                         aktualny_stan == PWM6_EDIT_STATE ||
+                         aktualny_stan == PWM7_EDIT_STATE) {
+                draw_EQ_menu(op_eq_menu, vol_l_lvl, vol_r_lvl, eq_lvl, aktualny_stan);
+                         }
             odswiez = 0;
+
         }
     }
 }

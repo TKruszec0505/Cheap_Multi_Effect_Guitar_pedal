@@ -2,7 +2,7 @@ import serial
 import time
 
 
-file_path = "program_do_fv1.bin"
+file_path = "name_of_your_programs_file.bin"
 PORT = 'COM3'  #change port
 BAUD = 115200
 

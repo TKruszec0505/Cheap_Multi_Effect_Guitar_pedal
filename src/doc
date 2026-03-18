@@ -1,0 +1,14 @@
+1. Modules
+
+Program is categorise into three main components:
+1.1 main.c
+1.2 OledMenuGui.c and .h
+1.3 Spin asm presets
+
+1.1 main.c
+Its file commonly use to combine everything within flash folder and its not different here.
+But there are few aspects that I will differentiate:
+- variables and typedefs -
+- pwm setups -
+- encoder logic -
+- encoder button logic -
