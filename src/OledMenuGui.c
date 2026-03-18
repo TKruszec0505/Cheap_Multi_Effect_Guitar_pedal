@@ -361,7 +361,7 @@ void draw_menu(int8_t state) {
 
 	buffer_clear();
 
-	draw_to_buffer(0, 40, font_vol_eq, 36, 0);
+	draw_to_buffer(0, 40, font_vol_eq, 36, 1);
 	if(state == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 
 	draw_to_buffer(2, 40, font_OFF, 11, 0);
