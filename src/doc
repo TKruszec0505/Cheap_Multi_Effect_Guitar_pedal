@@ -6,9 +6,19 @@ Program is categorise into three main components:
 1.3 Spin asm presets
 
 1.1 main.c
+
 Its file commonly use to combine everything within flash folder and its not different here.
 But there are few aspects that I will differentiate:
 - variables and typedefs -
-- pwm setups -
-- encoder logic -
-- encoder button logic -
+
+- pwm setups - pwm setup is crucial with that circuit because if you will look up FV1 documentation
+you will see that potentiometers interface is directly connected to DSP core. Since we dont use analog
+controls such as potentiometers but rather pwm with LP filter our core will be expose to noise much more than
+with typical application. For that matter we reduced resolution from 10bit to 8bit, it's a bit paradoxical
+because lower resolutions tends to have more jitter noise, yet our prescaler one will have higher carrier frequency
+that is much higher than carrier frequency for 10bit and acoustic range frequency's.
+
+- encoder and button logic - algorithms like our encoder logic are commonly known as state machines, we
+constatly checking wich state are we in. There are many state which create this machine so to control this
+easily we use typedef enum
+

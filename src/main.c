@@ -130,7 +130,6 @@ void aktualizuj_eq(uint8_t v) {
     OCR2B = (uint8_t)(((uint32_t)v * 255) / 100);
 }
 
-//trzeba zmienic piny enkodera(kolidują z pwm)
 
 int main(void) {
     //PWM: PB1 (OC1A), PB2 (OC1B), PB3 (OC2A)

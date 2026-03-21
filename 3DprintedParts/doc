@@ -1,0 +1,19 @@
+1. Modules
+1.1 - main case
+1.2 - rack handles
+1.3 - foot switch
+
+Project is optimise for MIDI purposes such as live performance optimisation and automation.
+I design these models to integrate them with rack case and my system within the rack.
+We can put our device to our rack case and control it using pedal switches or MIDI.
+In earlier stage of this project i thought that its best to go with MIDI and encoder
+minimalistic interface just to test presets since we put this in rack but then something remind me
+of amp foot switches that are basically another control circuit. ant then i realise that we could do something
+similar using attiny13a, 3 potentiometers, MIDI out and have fun with pure mechanical design.
+
+getting to the point we will read 3 potentiometers and buttons with our attiny and send information via MIDI to
+our main circuit. Our pedal will be printed with gear hatch with 5:1 ratio to potentiometer gear so when we turn
+pedal form 0 to 35 degrees our potentiometer will turn from 0 to 175.
+
+I will put here both .3mf and .f3d formats so you can already print or modify design as you wish.
+

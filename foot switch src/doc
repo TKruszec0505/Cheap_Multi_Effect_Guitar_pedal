@@ -1,0 +1,6 @@
+This is part of the project that is not required for proper working of the device itself but rather
+cool addition. Its code that evolves from idea of foot switch which is documented in 3DprintedParts/doc.
+Code is writen for ATtiny13a to accumulate potentiometers data and send it via MIDI or UART in this
+context its basically the same. So you will have three ways for using this device gui interface, MIDI automation
+or this foot switch. Its cheap as it gets because its literally required only three potentiometers, cabals, three buttons,
+attiny and small Oled.
