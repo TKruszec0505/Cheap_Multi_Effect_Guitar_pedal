@@ -241,6 +241,12 @@ const uint8_t font_vol_eq[] PROGMEM = {
 	0x7F, 0x49, 0x49, 0x49, 0x41, 0x00,
 	0x3E, 0x41, 0x51, 0x21, 0x5E, 0x00
 };
+const uint8_t font_midi[] PROGMEM = {
+	0x7F, 0x02, 0x04, 0x02, 0x7F, 0x00,
+	0x00, 0x41, 0x7F, 0x41, 0x00, 0x00,
+	0x7F, 0x41, 0x41, 0x22, 0x1C, 0x00,
+	0x00, 0x41, 0x7F, 0x41, 0x00, 0x00,
+};
 
 const FontResource FX_presets[] PROGMEM = {
 	{ font_reverb_chorus, sizeof(font_reverb_chorus) },
@@ -364,7 +370,7 @@ void draw_menu(int8_t state) {
 	draw_to_buffer(0, 40, font_vol_eq, 36, 1);
 	if(state == 0) draw_to_buffer(0, 20, char_ARROW, 5, 0);
 
-	draw_to_buffer(2, 40, font_OFF, 11, 0);
+	draw_to_buffer(2, 40, font_midi, 24, 1);
 	if(state == 1) draw_to_buffer(2, 20, char_ARROW, 5, 0);
 
 	draw_to_buffer(4, 40, font_BLINK, 27, 0);
@@ -480,6 +486,8 @@ void draw_MIDI_menu(uint8_t wybrana, uint8_t sw) {
 	if(sw) draw_to_buffer(1, 40, font_ON, 9, 0);
 	else   draw_to_buffer(1, 40, font_OFF, 11, 0);
 	if(wybrana == 1) draw_to_buffer(1, 20, char_ARROW, 5, 0);
+	update_display();
+
 }
 void draw_mod_menu(uint8_t wybrana) {
 	buffer_clear();

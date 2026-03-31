@@ -1,7 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "OledMenuGui.h"
-
+#include <avr/interrupt.h>
 
 #define LED_PIN PB1
 
@@ -10,6 +10,9 @@
 #define PRESET_OUT_2 PC1
 #define PRESET_OUT_3 PC2
 #define PRESET_OUT_4 PC3
+
+#define BAUD 9600
+#define MYUBRR (F_CPU/16/BAUD-1)
 
 TypStanu aktualny_stan = STAN_MENU_GLOWNE;
 
@@ -39,18 +42,24 @@ uint8_t eq_active = 1;
 int8_t preset_id = 5;       //4 bc its bypass(test fv-1 program)
 
 uint8_t odswiez = 1;
+/*
+void UART_init(uint16_t ubrr) {
+    UBRR0H = ubrr>>8;
+    UBRR0L = ubrr;
+
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
 
 
-void on() {
-    TCCR1A &= ~(1 << COM1A1);
-    PORTB |= (1 << LED_PIN);
+    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
+    sei();
 }
 
-void off() {
-    TCCR1A &= ~(1 << COM1A1);
-    PORTB &= ~(1 << LED_PIN);
-}
+ISR(USART_RX_vect) {
+    unsigned char receivedByte;
+    receivedByte = UDR0;
 
+}
+*/
 void blink() {
     TCCR1A &= ~(1 << COM1A1);
     for(uint8_t i=0; i<3; i++) {
@@ -144,6 +153,7 @@ int main(void) {
 
     i2c_init();
     oled_init();
+    //UART_init(MYUBRR);
 
 
     setup_pwm();   // Timer 1 (PAR1, PAR2)
@@ -236,7 +246,10 @@ int main(void) {
                     aktualny_stan = EQ_MENU_STATE;
                     op_eq_menu = 0;
                 }
-                else if (op_glowne == 1) off();
+                else if (op_glowne == 1) {
+                    aktualny_stan = MIDI_MENU_STATE;
+                    op_midi_menu = 0;
+                }
                 else if (op_glowne == 2) blink();
                 else if (op_glowne == 3) {
                     aktualny_stan = STAN_MENU_PWM;
@@ -282,6 +295,11 @@ int main(void) {
                 aktualizuj_vol_r(vol_r_lvl);
                 aktualizuj_eq(eq_lvl);
 
+            }
+            //funkcjonalnosci menu midi
+            else if (aktualny_stan == MIDI_MENU_STATE) {
+                // do zrobienia:
+                //ON/OFF only jak On to zeby czytac tylko z uart i zablokowac enkoder
             }
 
             //do listy parametrów
