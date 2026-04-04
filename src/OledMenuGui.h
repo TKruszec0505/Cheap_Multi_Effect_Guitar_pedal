@@ -43,13 +43,12 @@ typedef struct {
 } FontResource;
 
 extern const FontResource FX_presets[] PROGMEM;
+const char* const FX_names[] PROGMEM;
 
-extern const unsigned char epd_bitmap_logo1[] PROGMEM;
 extern const uint8_t char_ARROW[] ;
 extern const uint8_t font_ON[] ;
 extern const uint8_t font_OFF[] ;
 extern const uint8_t font_WSTECZ[] PROGMEM;
-extern const uint8_t cyfry[10][5] PROGMEM;
 
 void i2c_init(void);
 void i2c_start(void);
@@ -62,9 +61,10 @@ void buffer_clear();
 
 
 void draw_to_buffer(uint8_t row, uint8_t col, const uint8_t* data, uint8_t len, uint8_t is_progmem);
+void print(uint8_t row, uint8_t col, const char* str);
+void update_display();
 
-
-void rysuj_wartosc_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val);
+void draw_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val);
 void draw_menu(int8_t state);
 
 void draw_params_menu(int8_t wybrana, int8_t pwm_val,
