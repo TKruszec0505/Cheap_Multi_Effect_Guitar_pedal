@@ -189,12 +189,6 @@ void draw_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	print(row, col + 18, "%");
 }
 
-void draw_presets_to_buffor(uint8_t row, uint8_t col, uint8_t preset_id) {
-
-    print(row, col, (const char*)pgm_read_ptr(&FX_names[preset_id]));
-
-}
-
 void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pwm_val3,
 						uint8_t aktualny_stan, uint8_t sw,uint8_t preset_id) {
 	buffer_clear();
@@ -252,7 +246,7 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pw
 
 	//PRESET
 	print(7,40, "FX:");
-	draw_presets_to_buffor(7,57,preset_id);
+	print(7, 57, (const char*)pgm_read_ptr(&FX_names[preset_id]));
 	if(wybrana == 5){
 		if(aktualny_stan == PRESET_EDIT_STATE) print(7, 20, "ON");
 		else print(7, 20, ">");

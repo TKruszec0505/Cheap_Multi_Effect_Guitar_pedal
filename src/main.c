@@ -2,6 +2,7 @@
 #include <util/delay.h>
 #include "OledMenuGui.h"
 #include <avr/interrupt.h>
+#include <stdbool.h>
 
 #define LED_PIN PB1
 
@@ -13,6 +14,11 @@
 
 #define BAUD 9600
 #define MYUBRR (F_CPU/16/BAUD-1)
+#define BUFFER_SIZE 32
+
+volatile uint8_t uart_buffer[BUFFER_SIZE];
+volatile uint8_t head = 0;
+volatile uint8_t tail = 0;
 
 TypStanu aktualny_stan = STAN_MENU_GLOWNE;
 
@@ -31,35 +37,36 @@ int8_t vol_r_lvl = 80;
 int8_t vol_l_lvl = 80;
 int8_t eq_lvl = 80;
 
-uint8_t pwm_aktywne = 1;
-uint8_t pwm_aktywne2 = 1;
-uint8_t pwm_aktywne3 = 1;
+bool pwm_aktywne = 1;
+bool pwm_aktywne2 = 1;
+bool pwm_aktywne3 = 1;
 
-uint8_t vol_r_active = 0;
-uint8_t vol_l_active = 0;
-uint8_t eq_active = 1;
+bool vol_r_active = 0;
+bool vol_l_active = 0;
+bool eq_active = 1;
 
-int8_t preset_id = 5;       //4 bc its bypass(test fv-1 program)
+bool midi_active = 0;
+
+int8_t preset_id = 5;       //5 bc its bypass(test fv-1 program)
 
 uint8_t odswiez = 1;
-/*
-void UART_init(uint16_t ubrr) {
-    UBRR0H = ubrr>>8;
+
+void uart_init(unsigned int baud) {
+    unsigned int ubrr = F_CPU/16/baud-1;
+    UBRR0H = (ubrr >> 8);
     UBRR0L = ubrr;
-
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
-
-
-    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
-    sei();
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
+    UCSR0C = (1 << USBS0) | (3 << UCSZ00);
 }
-
 ISR(USART_RX_vect) {
-    unsigned char receivedByte;
-    receivedByte = UDR0;
-
+    uint8_t data = UDR0;
+    uint8_t next_head = (head + 1) % BUFFER_SIZE;
+    if (next_head != tail) {
+        uart_buffer[head] = data;
+        head = next_head;
+    }
 }
-*/
+
 void blink() {
     TCCR1A &= ~(1 << COM1A1);
     for(uint8_t i=0; i<3; i++) {
@@ -153,8 +160,8 @@ int main(void) {
 
     i2c_init();
     oled_init();
-    //UART_init(MYUBRR);
 
+    uart_init(BAUD);
 
     setup_pwm();   // Timer 1 (PAR1, PAR2)
     setup_pwm3();  // Timer 2 (PAR3)
@@ -232,6 +239,15 @@ int main(void) {
                 else if (!w_prawo && eq_lvl > 0) eq_lvl -= 5;
                 if (eq_active) aktualizuj_eq(eq_lvl);
             }
+            //MIDI menu
+            else if (aktualny_stan == MIDI_MENU_STATE) {
+                if(w_prawo) op_midi_menu++; else op_midi_menu--;
+                if (op_midi_menu > 1) op_midi_menu = 0;
+                if (op_midi_menu < 0) op_midi_menu = 1; // only 2 options : on/off and back to main menu
+                if (midi_active){
+                    op_midi_menu = 1; 
+                }
+            }
 
             odswiez = 1;
         }
@@ -300,6 +316,13 @@ int main(void) {
             else if (aktualny_stan == MIDI_MENU_STATE) {
                 // do zrobienia:
                 //ON/OFF only jak On to zeby czytac tylko z uart i zablokowac enkoder
+                if (op_midi_menu == 0) { //wstecz
+                    aktualny_stan = STAN_MENU_GLOWNE;
+                }
+                else if (op_midi_menu == 1) {
+                    midi_active = !midi_active;
+                    // tu można dodać dodatkową logikę, np. czyścić bufor UART, itp.
+                }
             }
 
             //do listy parametrów
@@ -339,8 +362,11 @@ int main(void) {
                          aktualny_stan == PWM7_EDIT_STATE) {
                 draw_EQ_menu(op_eq_menu, vol_l_lvl, vol_r_lvl, eq_lvl, aktualny_stan);
                          }
+            else if (aktualny_stan == MIDI_MENU_STATE) {
+                draw_MIDI_menu(op_midi_menu, midi_active);
+                }
             odswiez = 0;
-
+        
         }
     }
 }

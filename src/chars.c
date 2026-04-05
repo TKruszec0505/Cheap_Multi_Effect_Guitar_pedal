@@ -8,9 +8,7 @@
 
 
 //for otimalistion pupusose i choose to create characters file,
-//those ptrs arrayes in OledMenuGui once were arrayes of words as reverb etc.
-//so in our memory we cuold have n times same later.
-//its micro optimalisation but i enjoy it.
+//where i store font and logo bitmap, so i can easily use them in different places without need to copy paste code
 
 
 const uint8_t OLED_ASCII_FONT[] PROGMEM = {
