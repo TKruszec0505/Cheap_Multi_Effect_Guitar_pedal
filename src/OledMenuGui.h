@@ -17,8 +17,7 @@ typedef enum {
     - STAN_MENU_GLOWNE: main menu with options like "VOL EQ", "MIDI", "BLINK", "PRESETS".
     - STAN_MENU_PWM: submenu for adjusting PWM settings.
     - EQ_MENU_STATE: submenu for adjusting EQ settings.
-    - MIDI_MENU_STATE: submenu for MIDI settings.   
-
+    - MIDI_MENU_STATE: submenu for MIDI settings.
     */
     //main menu
     STAN_MENU_GLOWNE,

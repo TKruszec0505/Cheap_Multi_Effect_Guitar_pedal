@@ -119,12 +119,11 @@ void draw_menu(int8_t state) {
 
 	if (!logo_shown) {
 		buffer_clear();
-		// Kopiujemy bitmapę z Flash do bufora
 		for (uint16_t i = 0; i < 1024; i++) {
 			buffer[i] = pgm_read_byte(&epd_bitmap_logo1[i]);
 		}
-		update_display(); // Wysyłamy logo na ekran
-		_delay_ms(3000);  // Wyświetlamy przez 3 sekundy
+		update_display();
+		_delay_ms(3000);
 		logo_shown = 1;
 	}
 
@@ -150,27 +149,18 @@ void print(uint8_t row, uint8_t col, const char* str) {
     uint8_t current_col = col;
 
     while (*str) {
-        // 1. Zabezpieczenie przed wyjściem poza ekran (128 kolumn)
         if (current_col > 122) break; 
 
-        // 2. Obliczanie offsetu. 
-        // Twoja tablica zaczyna się od spacji (ASCII 32).
-        // Każdy znak to dokładnie 5 bajtów.
         uint16_t offset = (*str - 32) * 5;
 
-        // 3. Rysowanie do bufora.
-        // Używamy Twojej funkcji draw_to_buffer.
-        // len = 5 (bo tyle ma każdy znak w Twojej tablicy)
-        // is_progmem = 1 (bo tablica ma PROGMEM)
         draw_to_buffer(row, current_col, OLED_ASCII_FONT + offset, 5, 1);
 
-        // 4. Przesunięcie kursora o szerokość znaku + 1 piksel przerwy
         current_col += 6; 
 
-        // 5. Następny znak ze stringa
         str++;
     }
 }
+
 void draw_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	uint8_t s = val / 100;
 	uint8_t d = (val / 10) % 10;
@@ -258,7 +248,6 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pw
 void draw_MIDI_menu(uint8_t wybrana, uint8_t sw) {
 	buffer_clear();
 
-	// WSTECZ
 	print(0, 40, "WSTECZ");
 	if(wybrana == 0) print(0, 20, ">");
 
@@ -323,5 +312,4 @@ void draw_distortion_menu(uint8_t wybrana,uint8_t sw,uint8_t aktualny_stan,uint8
 		if(aktualny_stan == PWM4_EDIT_STATE) print(3, 20, "ON");
 		else print(3, 20, ">");
 	}
-
 }
