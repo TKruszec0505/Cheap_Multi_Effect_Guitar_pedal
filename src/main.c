@@ -13,7 +13,7 @@
 #define PRESET_OUT_3 PC2
 #define PRESET_OUT_4 PC3
 
-#define BAUD 9600
+#define BAUD 31250
 #define MYUBRR (F_CPU/16/BAUD-1)
 #define BUFFER_SIZE 32
 
@@ -165,7 +165,6 @@ void aktualizuj_vol_r(uint8_t v_r) {
 void aktualizuj_eq(uint8_t v) {
     OCR2B = (uint8_t) (((uint32_t) v * 255) / 100);
 }
-
 
 int main(void) {
     //PWM: PB1 (OC1A), PB2 (OC1B), PB3 (OC2A)
@@ -375,24 +374,19 @@ int main(void) {
         if (midi_active) {
             int16_t c = uart_get_char();
             if (c != -1) {
-                if (c == '\n' || c == '\r') {
-                    if (cmd_index > 0) {
-                        cmd_buffer[cmd_index] = '\0';
-
-                        if (strcmp(cmd_buffer, "pgm: 1") == 0) {
-                            preset_id = 0;
-                            set_preset(preset_id);
-                            odswiez = 1;
-                        } else if (strcmp(cmd_buffer, "pgm: 5") == 0) {
-                            preset_id = 5;
-                            set_preset(preset_id);
-                            odswiez = 1;
-                        }
-
-                        cmd_index = 0;
+                if ((uint8_t)c >= 0xC0 && (uint8_t)c <= 0xCF) {
+                    uint16_t timeout = 0;
+                    int16_t pgm_num = -1;
+                    while(pgm_num == -1 && timeout < 1000) {
+                        pgm_num = uart_get_char();
+                        timeout++;
                     }
-                } else if (cmd_index < BUFFER_SIZE - 1) {
-                    cmd_buffer[cmd_index++] = (char)c;
+                    if (pgm_num != -1) {
+                        preset_id = pgm_num;
+                        set_preset(preset_id);
+
+                        odswiez = 1;
+                    }
                 }
             }
         }

@@ -8,6 +8,7 @@ ROM 4: pitch-echo
 ROM 5: test(bypass in practise)
 ROM 6: reverb1
 ROM 7: reverb2
+
 EEPROM 0: shimmer
 EEPROM 1:
 EEPROM 2:

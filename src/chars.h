@@ -8,7 +8,6 @@
 #include <avr/pgmspace.h>
 
 const uint8_t OLED_ASCII_FONT[] PROGMEM;
-const uint8_t PROGMEM nums [10][5];
 const unsigned char epd_bitmap_logo1 [] PROGMEM;
 
 #endif //CHARS_H

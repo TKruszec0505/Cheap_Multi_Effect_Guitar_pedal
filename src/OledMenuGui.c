@@ -33,6 +33,9 @@ const char* const FX_names[] PROGMEM = {
 	"EPPROM7",
 	"EPPROM8",
 };
+const char* const num[] PROGMEM = {
+
+};
 
 // i2c (TWI)
 void i2c_init() {
@@ -145,20 +148,35 @@ void draw_menu(int8_t state) {
 	update_display();
 }
 
+void index_print(uint8_t row, uint8_t col, uint8_t i) {
+	uint8_t current_col = col;
+
+	uint8_t len = 5;
+	uint8_t index = 15;	//zero
+
+	uint8_t start = len*(index + i);
+
+	for (int j = start; j < start + 6; j++) {
+		if (current_col > 122) break;
+
+		draw_to_buffer(row, col, OLED_ASCII_FONT + j, len, j);
+	}
+}
+
 void print(uint8_t row, uint8_t col, const char* str) {
-    uint8_t current_col = col;
+	uint8_t current_col = col;
 
-    while (*str) {
-        if (current_col > 122) break; 
+	while (*str) {
+		if (current_col > 122) break;
 
-        uint16_t offset = (*str - 32) * 5;
+		uint16_t offset = (*str - 32) * 5;
 
-        draw_to_buffer(row, current_col, OLED_ASCII_FONT + offset, 5, 1);
+		draw_to_buffer(row, current_col, OLED_ASCII_FONT + offset, 5, 1);
 
-        current_col += 6; 
+		current_col += 6;
 
-        str++;
-    }
+		str++;
+	}
 }
 
 void draw_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
@@ -166,16 +184,10 @@ void draw_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	uint8_t d = (val / 10) % 10;
 	uint8_t j = val % 10;
 
-	// Setki
-	if (s > 0) draw_to_buffer(row, col, nums[s], 5, 1);
+	if (s > 0) print(row, col, "1");
+	if (s > 0|| d > 0) index_print(row, col + 6, d);
+	index_print(row, col + 12, j);
 
-	// Dziesiątki (col + 6 pikseli odstępu)
-	if (s > 0 || d > 0) draw_to_buffer(row, col + 6, nums[d], 5, 1);
-
-	// Jedności (col + 12 pikseli odstępu)
-	draw_to_buffer(row, col + 12, nums[j], 5, 1);
-
-	//% (col + 18 pikseli odstępu)
 	print(row, col + 18, "%");
 }
 
@@ -255,7 +267,6 @@ void draw_MIDI_menu(uint8_t wybrana, uint8_t sw) {
 	else   print(1, 40, "OFF");
 	if(wybrana == 1) print(1, 20, ">");
 	update_display();
-
 }
 void draw_mod_menu(uint8_t wybrana) {
 	buffer_clear();

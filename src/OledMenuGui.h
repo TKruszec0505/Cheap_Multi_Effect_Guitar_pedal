@@ -80,6 +80,7 @@ void draw_to_buffer(uint8_t row, uint8_t col, const uint8_t* data, uint8_t len, 
 
 //This function is basiclly a mix of clasic printf and set_cursor. It takes a position and string and draws it on the display. It handles the conversion of characters to their corresponding byte patterns using the OLED_ASCII_FONT array stored in PROGMEM. The function also ensures that it does not write beyond the display boundaries.
 void print(uint8_t row, uint8_t col, const char* str);
+void index_print(uint8_t row, uint8_t col, uint8_t i);
 
 void update_display();
 
