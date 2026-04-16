@@ -1,6 +1,7 @@
 //
 // Created by Tomasz on 28.01.2026.
 //
+
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/pgmspace.h>
@@ -32,9 +33,6 @@ const char* const FX_names[] PROGMEM = {
 	"EPPROM6",
 	"EPPROM7",
 	"EPPROM8",
-};
-const char* const num[] PROGMEM = {
-
 };
 
 // i2c (TWI)
@@ -159,7 +157,7 @@ void index_print(uint8_t row, uint8_t col, uint8_t i) {
 	for (int j = start; j < start + 6; j++) {
 		if (current_col > 122) break;
 
-		draw_to_buffer(row, col, OLED_ASCII_FONT + j, len, j);
+		draw_to_buffer(row, col, OLED_ASCII_FONT + j, len, 1);
 	}
 }
 
@@ -185,7 +183,7 @@ void draw_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	uint8_t j = val % 10;
 
 	if (s > 0) print(row, col, "1");
-	if (s > 0|| d > 0) index_print(row, col + 6, d);
+	if (s > 0 || d > 0) index_print(row, col + 6, d);
 	index_print(row, col + 12, j);
 
 	print(row, col + 18, "%");
@@ -195,7 +193,6 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pw
 						uint8_t aktualny_stan, uint8_t sw,uint8_t preset_id) {
 	buffer_clear();
 
-	// WSTECZ
 	print(0, 40, "WSTECZ");
 	if(wybrana == 0) print(0, 20, ">");
 
@@ -221,23 +218,18 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pw
 			print(5, 20, ">");
 		}
 	} else {
-		// PAR1
 		print(3, 40, "PAR1");
 		draw_pwm_to_buffer(3, 70, pwm_val);
 		if(wybrana == 2) {
 			if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM) print(3, 20, "ON");
 			else print(3, 20, ">");
 		}
-
-		// PAR2
 		print(4, 40, "PAR2");
 		draw_pwm_to_buffer(4, 70, pwm_val2);
 		if(wybrana == 3) {
 			if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2) print(4, 20, "ON");
 			else print(4, 20, ">");
 		}
-
-		// PAR3
 		print(5, 40, "PAR3");
 		draw_pwm_to_buffer(5, 70, pwm_val3);
 		if(wybrana == 4) {
@@ -246,7 +238,6 @@ void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pw
 		}
 	}
 
-	//PRESET
 	print(7,40, "FX:");
 	print(7, 57, (const char*)pgm_read_ptr(&FX_names[preset_id]));
 	if(wybrana == 5){
@@ -271,18 +262,15 @@ void draw_MIDI_menu(uint8_t wybrana, uint8_t sw) {
 void draw_mod_menu(uint8_t wybrana) {
 	buffer_clear();
 
-	// WSTECZ
 	print(0, 40, "WSTECZ");
 	if(wybrana == 0) print(0, 20, ">");
 }
 void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t pwm_val2,uint8_t pwm_val3, uint8_t aktualny_stan) {
 	buffer_clear();
 
-	// WSTECZ
 	print(0, 40, "WSTECZ");
 	if(wybrana == 0) print(0, 20, ">");
 
-	//params settings
 	print(3, 40, "PAR1");
 	draw_pwm_to_buffer(3, 70, pwm_val);
 	if(wybrana == 1) {	//vol l
@@ -307,7 +295,6 @@ void draw_distortion_menu(uint8_t wybrana,uint8_t sw,uint8_t aktualny_stan,uint8
 
 	buffer_clear();
 
-	// WSTECZ
 	print(0, 40, "WSTECZ");
 	if(wybrana == 0) print(0, 20, ">");
 
@@ -315,7 +302,6 @@ void draw_distortion_menu(uint8_t wybrana,uint8_t sw,uint8_t aktualny_stan,uint8
 	else   print(1, 40, "OFF");
 	if(wybrana == 1) print(1, 20, ">");
 
-	//params settings
 	print(3, 40, "PAR1");
 	draw_pwm_to_buffer(3, 70, pwm_val);
 

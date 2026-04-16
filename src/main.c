@@ -51,7 +51,7 @@ bool midi_active = 0;
 int8_t preset_id = 5; //5 bc its bypass(test fv-1 program)
 
 uint8_t odswiez = 1;
-
+/*
 void uart_init(unsigned int baud) {
     uint32_t ubrr = F_CPU / 16 / baud - 1;
     UBRR0H = (ubrr >> 8);
@@ -68,7 +68,7 @@ ISR(USART_RX_vect) {
         head = next_head;
     }
 }
-
+*/
 char cmd_buffer[BUFFER_SIZE];
 uint8_t cmd_index = 0;
 
@@ -89,56 +89,29 @@ void blink() {
     }
 }
 
-void setup_vol_stereo() {
-    // TCCR0A: Aktywacja obu kanałów A i B w trybie Fast PWM
-    // COM0A1 (dla Lewego), COM0B1 (dla Prawego)
-    TCCR0A = (1 << COM0A1) | (1 << COM0B1) | (1 << WGM01) | (1 << WGM00);
-
-    // TCCR0B: Ustawienie Preskalera 8
-    TCCR0B = (1 << CS01);
-
-    // Ustawienie pinów PD6 (Lewy) i PD5 (Prawy) jako wyjścia
-    DDRD |= (1 << PD6) | (1 << PD5);
-}
-
-void set_EQ() {
-    TCCR2A |= (1 << COM2B1);
-    DDRD |= (1 << PD3);
-}
-
 void set_preset(uint8_t id) {
+    uint8_t val = id % 8;
+
     PORTC &= ~((1 << PC0) | (1 << PC1) | (1 << PC2));
 
-    uint8_t fixed_id = id % 8;
-    if (~fixed_id & (1 << 0))
-        PORTC |= (1 << PC0);
-    if (~fixed_id & (1 << 1))
-        PORTC |= (1 << PC1);
-    if (~fixed_id & (1 << 2))
-        PORTC |= (1 << PC2);
+    // (LOGIKA ODWRÓCONA)
+    if (!(val & (1 << 0))) PORTC |= (1 << PC0);
+    if (!(val & (1 << 1))) PORTC |= (1 << PC1);
+    if (!(val & (1 << 2))) PORTC |= (1 << PC2);
 }
-
-void setup_pwm() {
-    // TIMER1
-    // WGM12 = 1 i WGM10 = 1  -> FAST PWM, 8-bit (TOP = 255)
-    // CS10 = 1               -> Prescaler 1
-    TCCR1A = (1 << WGM10);
+void setup_all_timers() {
+    // Timer 1 (PB1, PB2) - Fast PWM 8-bit
+    TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM10);
     TCCR1B = (1 << WGM12) | (1 << CS10);
 
-    // TIMER2
-    // WGM21 = 1 i WGM20 = 1  -> FAST PWM, 8-bit (TOP = 255)
-    // CS20 = 1               -> Prescaler 1
-    TCCR2A = (1 << WGM21) | (1 << WGM20);
+    // Timer 2 (PB3, PD3) - Fast PWM
+    // COM2A1 (dla PB3) i COM2B1 (dla PD3) w jednym rejestrze
+    TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
     TCCR2B = (1 << CS20);
 
-    DDRB |= (1 << PB1) | (1 << PB2) | (1 << PB3);
-}
-
-void setup_pwm3() {
-    TCCR2A = (1 << COM2A1) | (1 << WGM21) | (1 << WGM20);
-    TCCR2B = (1 << CS20); // CS20 = Prescaler 1
-    DDRB |= (1 << PB3);
-    // freq: 16MHz / 256 = 62.5 kHz (input rezonator freq/Prescaler*bits)
+    // Timer 0 (PD5, PD6) - Fast PWM (dla Vol L/R)
+    TCCR0A = (1 << COM0A1) | (1 << COM0B1) | (1 << WGM01) | (1 << WGM00);
+    TCCR0B = (1 << CS01);
 }
 
 void aktualizuj_pwm(uint8_t v) {
@@ -180,12 +153,10 @@ int main(void) {
     i2c_init();
     oled_init();
 
-    uart_init(BAUD);
-    sei();
+    //uart_init(BAUD);
+    //sei();
 
-    setup_pwm(); // Timer 1 (PAR1, PAR2)
-    setup_pwm3(); // Timer 2 (PAR3)
-    set_EQ();
+    setup_all_timers();
 
     PORTC |= (1 << PRESET_OUT_4);
     set_preset(5);
@@ -370,7 +341,7 @@ int main(void) {
             }
             odswiez = 0;
         }
-
+/*
         if (midi_active) {
             int16_t c = uart_get_char();
             if (c != -1) {
@@ -389,6 +360,8 @@ int main(void) {
                     }
                 }
             }
+
         }
+    */
     }
 }

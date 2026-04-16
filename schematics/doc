@@ -31,7 +31,9 @@ Best example is instant cut when we switch effects. Its major problem when you a
 from long delays or reverbs to other effects. You can try to overcome this problem with MIDI automation
 in your DAW but I cannot guarantee you will be happy whit it. Its FV1 design that gets in the way of such things
 because suddenly this processor cannot be program as it is but rather it reads programs from eeprom.
-We can use STM32 next time for both interface and DSP but it would not be that cheap, more about it latter.
+We can use another FV-1 that is not synchronized with our first FV and then plug them both to analog mixer circuit
+so firs FV-1 can change and second will resolve long delay/reverb without the cut but it requires special algorithms
+to calculate when to cut input to second FV and how long we need to resolve effect.
 
 1.2 Power supply and power filtering
 
@@ -49,6 +51,8 @@ we should do that as close as possible to them.
 -since we using pwm to adjust parameters we need strong filters and dividers to connect to FV1.
 
 1.3 ATMega interfaces
+
+
 
 1.4 FV1 circuit
 There are many alternatives that are better then this chip but within this price range nothing can compete.

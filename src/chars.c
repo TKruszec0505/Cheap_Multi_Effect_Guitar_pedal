@@ -6,11 +6,6 @@
 #include <avr/pgmspace.h>
 #include <avr/io.h>
 
-
-//for otimalistion pupusose i choose to create characters file,
-//where i store font and logo bitmap, so i can easily use them in different places without need to copy paste code
-
-
 const uint8_t OLED_ASCII_FONT[] PROGMEM = {
 	  0x00, 0x00, 0x00, 0x00, 0x00, //   0
 	  0x00, 0x00, 0x2f, 0x00, 0x00, // ! 1
@@ -77,7 +72,6 @@ const uint8_t OLED_ASCII_FONT[] PROGMEM = {
 	  0x04, 0x02, 0x01, 0x02, 0x04, // ^ 62
 	  0x40, 0x40, 0x40, 0x40, 0x40  // _ 63
 };
-
 
 //logo bitmap
 //https://javl.github.io/image2cpp/
