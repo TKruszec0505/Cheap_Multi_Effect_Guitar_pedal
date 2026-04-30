@@ -80,7 +80,6 @@ void oled_init() {
     send_cmd(0xAF);                     // Display ON
 }
 
-
 void update_display() {
 	send_cmd(0x20); send_cmd(0x02);
 
@@ -189,124 +188,123 @@ void draw_pwm_to_buffer(uint8_t row, uint8_t col, uint8_t val) {
 	print(row, col + 18, "%");
 }
 
-void draw_params_menu(int8_t wybrana, int8_t pwm_val, int8_t pwm_val2, int8_t pwm_val3,
-						uint8_t aktualny_stan, uint8_t sw,uint8_t preset_id) {
+void draw_params_menu(int8_t ch, int8_t pwm_val, int8_t pwm_val2, int8_t pwm_val3,
+						uint8_t cur_state, uint8_t sw,uint8_t preset_id) {
 	buffer_clear();
 
 	print(0, 40, "WSTECZ");
-	if(wybrana == 0) print(0, 20, ">");
+	if(ch == 0) print(0, 20, ">");
 
 	if(sw) print(1, 40, "ON");
 	else   print(1, 40, "OFF");
-	if(wybrana == 1) print(1, 20, ">");
+	if(ch == 1) print(1, 20, ">");
 	if (preset_id == 5) {
 		print(3, 40, "PAR1");
 		print(3, 70, "-");
-		if (wybrana == 2) {
+		if (ch == 2) {
 			print(3, 20, ">");
 		}
 
 		print(4, 40, "PAR2");
 		print(4, 70, "-");
-		if (wybrana == 3) {
+		if (ch == 3) {
 			print(4, 20, ">");
 		}
 
 		print(5, 40, "PAR3");
 		print(5, 70, "-");
-		if (wybrana == 4) {
+		if (ch == 4) {
 			print(5, 20, ">");
 		}
 	} else {
 		print(3, 40, "PAR1");
 		draw_pwm_to_buffer(3, 70, pwm_val);
-		if(wybrana == 2) {
-			if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM) print(3, 20, "ON");
+		if(ch == 2) {
+			if(cur_state == PAR_ONE_EDIT_STATE) print(3, 20, "ON");
 			else print(3, 20, ">");
 		}
 		print(4, 40, "PAR2");
 		draw_pwm_to_buffer(4, 70, pwm_val2);
-		if(wybrana == 3) {
-			if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2) print(4, 20, "ON");
+		if(ch == 3) {
+			if(cur_state == PAR_TWO_EDIT_STATE) print(4, 20, "ON");
 			else print(4, 20, ">");
 		}
 		print(5, 40, "PAR3");
 		draw_pwm_to_buffer(5, 70, pwm_val3);
-		if(wybrana == 4) {
-			if(aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) print(5, 20, "ON");
+		if(ch == 4) {
+			if(cur_state == PAR_THREE_EDIT_STATE) print(5, 20, "ON");
 			else print(5, 20, ">");
 		}
 	}
 
 	print(7,40, "FX:");
 	print(7, 57, (const char*)pgm_read_ptr(&FX_names[preset_id]));
-	if(wybrana == 5){
-		if(aktualny_stan == PRESET_EDIT_STATE) print(7, 20, "ON");
+	if(ch == 5){
+		if(cur_state == PRESET_EDIT_STATE) print(7, 20, "ON");
 		else print(7, 20, ">");
 	}
 
 	update_display();
 }
-
-void draw_MIDI_menu(uint8_t wybrana, uint8_t sw) {
+void draw_MIDI_menu(uint8_t ch, uint8_t sw) {
 	buffer_clear();
 
 	print(0, 40, "WSTECZ");
-	if(wybrana == 0) print(0, 20, ">");
+	if(ch == 0) print(0, 20, ">");
 
 	if(sw) print(1, 40, "ON");
 	else   print(1, 40, "OFF");
-	if(wybrana == 1) print(1, 20, ">");
+	if(ch == 1) print(1, 20, ">");
 	update_display();
 }
-void draw_mod_menu(uint8_t wybrana) {
+void draw_mod_menu(uint8_t ch) {
 	buffer_clear();
 
 	print(0, 40, "WSTECZ");
-	if(wybrana == 0) print(0, 20, ">");
+	if(ch == 0) print(0, 20, ">");
 }
-void draw_EQ_menu(uint8_t wybrana,uint8_t pwm_val, uint8_t pwm_val2,uint8_t pwm_val3, uint8_t aktualny_stan) {
+void draw_EQ_menu(uint8_t ch,uint8_t pwm_val, uint8_t pwm_val2,uint8_t pwm_val3, uint8_t cur_state) {
 	buffer_clear();
 
 	print(0, 40, "WSTECZ");
-	if(wybrana == 0) print(0, 20, ">");
+	if(ch == 0) print(0, 20, ">");
 
 	print(3, 40, "PAR1");
 	draw_pwm_to_buffer(3, 70, pwm_val);
-	if(wybrana == 1) {	//vol l
-		if(aktualny_stan == PWM5_EDIT_STATE) print(3, 20, "ON");
+	if(ch == 1) {	//vol l
+		if(cur_state == PWM5_EDIT_STATE) print(3, 20, "ON");
 		else print(3, 20, ">");
 	}
 	print(4, 40, "PAR2");
 	draw_pwm_to_buffer(4, 70, pwm_val2);
-	if (wybrana == 2) { // vol r
-		if (aktualny_stan == PWM6_EDIT_STATE) print(4, 20, "ON");
+	if (ch == 2) { // vol r
+		if (cur_state == PWM6_EDIT_STATE) print(4, 20, "ON");
 		else print(4, 20, ">");
 	}
 	print(5, 40, "PAR3");
 	draw_pwm_to_buffer(5, 70, pwm_val3);
-	if (wybrana == 3) { // eq
-		if (aktualny_stan == PWM7_EDIT_STATE) print(5, 20, "ON");
+	if (ch == 3) { // eq
+		if (cur_state == PWM7_EDIT_STATE) print(5, 20, "ON");
 		else print(5, 20, ">");
 	}
 	update_display();
 }
-void draw_distortion_menu(uint8_t wybrana,uint8_t sw,uint8_t aktualny_stan,uint8_t pwm_val){
+void draw_distortion_menu(uint8_t ch,uint8_t sw,uint8_t cur_state,uint8_t pwm_val){
 
 	buffer_clear();
 
 	print(0, 40, "WSTECZ");
-	if(wybrana == 0) print(0, 20, ">");
+	if(ch == 0) print(0, 20, ">");
 
 	if(sw) print(1, 40, "ON");
 	else   print(1, 40, "OFF");
-	if(wybrana == 1) print(1, 20, ">");
+	if(ch == 1) print(1, 20, ">");
 
 	print(3, 40, "PAR1");
 	draw_pwm_to_buffer(3, 70, pwm_val);
 
-	if(wybrana == 2) {
-		if(aktualny_stan == PWM4_EDIT_STATE) print(3, 20, "ON");
+	if(ch == 2) {
+		if(cur_state == PWM4_EDIT_STATE) print(3, 20, "ON");
 		else print(3, 20, ">");
 	}
 }

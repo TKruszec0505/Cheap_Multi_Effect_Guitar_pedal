@@ -21,26 +21,26 @@ volatile uint8_t uart_buffer[BUFFER_SIZE];
 volatile uint8_t head = 0;
 volatile uint8_t tail = 0;
 
-TypStanu aktualny_stan = STAN_MENU_GLOWNE;
+State current_state = MAIN_MANU_STATE;
 
-int8_t op_glowne = 0;
-int8_t op_pwm_menu = 0;
-int8_t op_mod_menu = 0;
+int8_t main_menu = 0;
+int8_t pwm_menu = 0;
+int8_t mod_menu = 0;
 int8_t op_midi_menu = 0;
 int8_t op_eq_menu = 0;
 int8_t op_dst_menu = 0;
 
-int8_t wartosc_pwm = 80;
-int8_t wartosc_pwm2 = 80;
-int8_t wartosc_pwm3 = 80;
+int8_t par_one_val = 80;
+int8_t par_two_val = 80;
+int8_t par_three_val = 80;
 
 int8_t vol_r_lvl = 80;
 int8_t vol_l_lvl = 80;
 int8_t eq_lvl = 80;
 
-bool pwm_aktywne = 1;
-bool pwm_aktywne2 = 1;
-bool pwm_aktywne3 = 1;
+bool par_one_pwm_active = 1;
+bool par_two_pwm_active = 1;
+bool par_three_pwm_active = 1;
 
 bool vol_r_active = 0;
 bool vol_l_active = 0;
@@ -50,14 +50,16 @@ bool midi_active = 0;
 
 int8_t preset_id = 5; //5 bc its bypass(test fv-1 program)
 
-uint8_t odswiez = 1;
-/*
+uint8_t update = 1;
+
 void uart_init(unsigned int baud) {
-    uint32_t ubrr = F_CPU / 16 / baud - 1;
-    UBRR0H = (ubrr >> 8);
-    UBRR0L = ubrr;
+    uint16_t ubrr_value = (F_CPU / 16 / baud) - 1;
+    UBRR0H = (uint8_t)(ubrr_value >> 8);
+    UBRR0L = (uint8_t)ubrr_value;
+
     UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
-    UCSR0C = (1 << USBS0) | (3 << UCSZ00);
+
+    UCSR0C = (3 << UCSZ00);
 }
 
 ISR(USART_RX_vect) {
@@ -68,12 +70,12 @@ ISR(USART_RX_vect) {
         head = next_head;
     }
 }
-*/
+
 char cmd_buffer[BUFFER_SIZE];
 uint8_t cmd_index = 0;
 
 int16_t uart_get_char(void) {
-    if (head == tail) return -1; // Bufor pusty
+    if (head == tail) return -1;    // empty
     uint8_t data = uart_buffer[tail];
     tail = (tail + 1) % BUFFER_SIZE;
     return data;
@@ -94,7 +96,6 @@ void set_preset(uint8_t id) {
 
     PORTC &= ~((1 << PC0) | (1 << PC1) | (1 << PC2));
 
-    // (LOGIKA ODWRÓCONA)
     if (!(val & (1 << 0))) PORTC |= (1 << PC0);
     if (!(val & (1 << 1))) PORTC |= (1 << PC1);
     if (!(val & (1 << 2))) PORTC |= (1 << PC2);
@@ -114,28 +115,28 @@ void setup_all_timers() {
     TCCR0B = (1 << CS01);
 }
 
-void aktualizuj_pwm(uint8_t v) {
+void upadte_par_one(uint8_t v) {
     OCR1A = (uint16_t) (((uint32_t) v * 255) / 100);
 }
 
-void aktualizacja_pwm2(uint8_t v) {
+void upadte_par_two(uint8_t v) {
     OCR1B = (uint16_t) (((uint32_t) v * 255) / 100);
 }
 
-void aktualizacja_pwm3(uint8_t v) {
+void update_par_three(uint8_t v) {
     //8bit
     OCR2A = (uint16_t) (((uint32_t) v * 255) / 100);
 }
 
-void aktualizuj_vol_l(uint8_t v_l) {
+void update_vol_l(uint8_t v_l) {
     OCR0A = (uint8_t) (((uint32_t) v_l * 255) / 100);
 }
 
-void aktualizuj_vol_r(uint8_t v_r) {
+void update_vol_r(uint8_t v_r) {
     OCR0B = (uint8_t) (((uint32_t) v_r * 255) / 100);
 }
 
-void aktualizuj_eq(uint8_t v) {
+void update_eq(uint8_t v) {
     OCR2B = (uint8_t) (((uint32_t) v * 255) / 100);
 }
 
@@ -153,17 +154,17 @@ int main(void) {
     i2c_init();
     oled_init();
 
-    //uart_init(BAUD);
-    //sei();
+    uart_init(BAUD);
+    sei();
 
     setup_all_timers();
 
     PORTC |= (1 << PRESET_OUT_4);
     set_preset(5);
 
-    pwm_aktywne = 1;
+    par_one_pwm_active = 1;
 
-    draw_menu(op_glowne);
+    draw_menu(main_menu);
 
 
     uint8_t stan_A_poprzedni = (PIND & (1 << PD7));
@@ -175,31 +176,31 @@ int main(void) {
             uint8_t w_prawo = (PIND & (1 << PD4));
 
             //main menu
-            if (aktualny_stan == STAN_MENU_GLOWNE) {
-                if (w_prawo) op_glowne++;
-                else op_glowne--;
-                if (op_glowne > 3) op_glowne = 0;
-                if (op_glowne < 0) op_glowne = 3;
+            if (current_state == MAIN_MANU_STATE) {
+                if (w_prawo) main_menu++;
+                else main_menu--;
+                if (main_menu > 3) main_menu = 0;
+                if (main_menu < 0) main_menu = 3;
             }
             //presets menu
-            else if (aktualny_stan == STAN_MENU_PWM) {
-                if (w_prawo) op_pwm_menu++;
-                else op_pwm_menu--;
-                if (op_pwm_menu > 5) op_pwm_menu = 0;
-                if (op_pwm_menu < 0) op_pwm_menu = 5;
-            } else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM) {
-                if (w_prawo && wartosc_pwm < 100) wartosc_pwm += 5;
-                else if (!w_prawo && wartosc_pwm > 0) wartosc_pwm -= 5;
-                if (pwm_aktywne) aktualizuj_pwm(wartosc_pwm);
-            } else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2) {
-                if (w_prawo && wartosc_pwm2 < 100) wartosc_pwm2 += 5;
-                else if (!w_prawo && wartosc_pwm2 > 0) wartosc_pwm2 -= 5;
-                if (pwm_aktywne) aktualizacja_pwm2(wartosc_pwm2);
-            } else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3) {
-                if (w_prawo && wartosc_pwm3 < 100) wartosc_pwm3 += 5;
-                else if (!w_prawo && wartosc_pwm3 > 0) wartosc_pwm3 -= 5;
-                if (pwm_aktywne) aktualizacja_pwm3(wartosc_pwm3);
-            } else if (aktualny_stan == PRESET_EDIT_STATE) {
+            else if (current_state == PARAMS_MENU_STATE) {
+                if (w_prawo) pwm_menu++;
+                else pwm_menu--;
+                if (pwm_menu > 5) pwm_menu = 0;
+                if (pwm_menu < 0) pwm_menu = 5;
+            } else if (current_state == PAR_ONE_EDIT_STATE) {
+                if (w_prawo && par_one_val < 100) par_one_val += 5;
+                else if (!w_prawo && par_one_val > 0) par_one_val -= 5;
+                if (par_one_pwm_active) upadte_par_one(par_one_val);
+            } else if (current_state == PAR_TWO_EDIT_STATE) {
+                if (w_prawo && par_two_val < 100) par_two_val += 5;
+                else if (!w_prawo && par_two_val > 0) par_two_val -= 5;
+                if (par_one_pwm_active) upadte_par_two(par_two_val);
+            } else if (current_state == PAR_THREE_EDIT_STATE) {
+                if (w_prawo && par_three_val < 100) par_three_val += 5;
+                else if (!w_prawo && par_three_val > 0) par_three_val -= 5;
+                if (par_one_pwm_active) update_par_three(par_three_val);
+            } else if (current_state == PRESET_EDIT_STATE) {
                 if (w_prawo) preset_id++;
                 else preset_id--;
                 if (preset_id > 15) preset_id = 0; //0-15(16 presets)
@@ -209,26 +210,26 @@ int main(void) {
                 set_preset(preset_id);
             }
             //EQ-VOL menu
-            else if (aktualny_stan == EQ_MENU_STATE) {
+            else if (current_state == EQ_MENU_STATE) {
                 if (w_prawo) op_eq_menu++;
                 else op_eq_menu--;
                 if (op_eq_menu > 3) op_eq_menu = 0;
                 if (op_eq_menu < 0) op_eq_menu = 3;
-            } else if (aktualny_stan == PWM5_EDIT_STATE) {
+            } else if (current_state == PWM5_EDIT_STATE) {
                 if (w_prawo && vol_l_lvl < 100) vol_l_lvl += 5;
                 else if (!w_prawo && vol_l_lvl > 0) vol_l_lvl -= 5;
-                if (vol_l_active) aktualizuj_vol_l(vol_l_lvl);
-            } else if (aktualny_stan == PWM6_EDIT_STATE) {
+                if (vol_l_active) update_vol_l(vol_l_lvl);
+            } else if (current_state == PWM6_EDIT_STATE) {
                 if (w_prawo && vol_r_lvl < 100) vol_r_lvl += 5;
                 else if (!w_prawo && vol_r_lvl > 0) vol_r_lvl -= 5;
-                if (vol_r_active) aktualizuj_vol_r(vol_r_lvl);
-            } else if (aktualny_stan == PWM7_EDIT_STATE) {
+                if (vol_r_active) update_vol_r(vol_r_lvl);
+            } else if (current_state == PWM7_EDIT_STATE) {
                 if (w_prawo && eq_lvl < 100) eq_lvl += 5;
                 else if (!w_prawo && eq_lvl > 0) eq_lvl -= 5;
-                if (eq_active) aktualizuj_eq(eq_lvl);
+                if (eq_active) update_eq(eq_lvl);
             }
             //MIDI menu
-            else if (aktualny_stan == MIDI_MENU_STATE) {
+            else if (current_state == MIDI_MENU_STATE) {
                 if (w_prawo) op_midi_menu++;
                 else op_midi_menu--;
                 if (op_midi_menu > 1) op_midi_menu = 0;
@@ -238,7 +239,7 @@ int main(void) {
                 }
             }
 
-            odswiez = 1;
+            update = 1;
         }
         stan_A_poprzedni = stan_A;
 
@@ -246,122 +247,140 @@ int main(void) {
         if (!(PIND & (1 << PD2))) {
             _delay_ms(50); // Debounce
 
-            if (aktualny_stan == STAN_MENU_GLOWNE) {
-                if (op_glowne == 0) {
-                    aktualny_stan = EQ_MENU_STATE;
+            if (current_state == MAIN_MANU_STATE) {
+                if (main_menu == 0) {
+                    current_state = EQ_MENU_STATE;
                     op_eq_menu = 0;
-                } else if (op_glowne == 1) {
-                    aktualny_stan = MIDI_MENU_STATE;
+                } else if (main_menu == 1) {
+                    current_state = MIDI_MENU_STATE;
                     op_midi_menu = 0;
-                } else if (op_glowne == 2) blink();
-                else if (op_glowne == 3) {
-                    aktualny_stan = STAN_MENU_PWM;
-                    op_pwm_menu = 0;
+                } else if (main_menu == 2) blink();
+                else if (main_menu == 3) {
+                    current_state = PARAMS_MENU_STATE;
+                    pwm_menu = 0;
                 }
             }
             //funkcjonalnosci menu parametrow
-            else if (aktualny_stan == STAN_MENU_PWM) {
-                if (op_pwm_menu == 0) {
+            else if (current_state == PARAMS_MENU_STATE) {
+                if (pwm_menu == 0) {
                     // wstecz
-                    aktualny_stan = STAN_MENU_GLOWNE;
-                } else if (op_pwm_menu == 1) {
+                    current_state = MAIN_MANU_STATE;
+                } else if (pwm_menu == 1) {
                     // ON/OFF dla wszystkich kanałów PWM
-                    pwm_aktywne = !pwm_aktywne;
-                    if (pwm_aktywne) {
+                    par_one_pwm_active = !par_one_pwm_active;
+                    if (par_one_pwm_active) {
                         TCCR1A |= (1 << COM1A1) | (1 << COM1B1); // Timer 1 (A i B)
                         TCCR2A |= (1 << COM2A1); // Timer 2
-                        aktualizuj_pwm(wartosc_pwm);
-                        aktualizacja_pwm2(wartosc_pwm2);
-                        aktualizacja_pwm3(wartosc_pwm3);
+                        upadte_par_one(par_one_val);
+                        upadte_par_two(par_two_val);
+                        update_par_three(par_three_val);
                     } else {
                         TCCR1A &= ~((1 << COM1A1) | (1 << COM1B1));
                         TCCR2A &= ~(1 << COM2A1);
                         PORTB &= ~((1 << PB1) | (1 << PB2) | (1 << PB3));
                     }
-                } else if (op_pwm_menu == 2) aktualny_stan = STAN_EDYCJA_WARTOSCI_PWM;
-                else if (op_pwm_menu == 3) aktualny_stan = STAN_EDYCJA_WARTOSCI_PWM2;
-                else if (op_pwm_menu == 4) aktualny_stan = STAN_EDYCJA_WARTOSCI_PWM3;
-                else if (op_pwm_menu == 5) aktualny_stan = PRESET_EDIT_STATE;
+                } else if (pwm_menu == 2) current_state = PAR_ONE_EDIT_STATE;
+                else if (pwm_menu == 3) current_state = PAR_TWO_EDIT_STATE;
+                else if (pwm_menu == 4) current_state = PAR_THREE_EDIT_STATE;
+                else if (pwm_menu == 5) current_state = PRESET_EDIT_STATE;
             }
             //funkcjonalnosci  menu eq
-            else if (aktualny_stan == EQ_MENU_STATE) {
+            else if (current_state == EQ_MENU_STATE) {
                 if (op_eq_menu == 0) {
                     //wstecz
-                    aktualny_stan = STAN_MENU_GLOWNE;
-                } else if (op_eq_menu == 1) aktualny_stan = PWM5_EDIT_STATE;
-                else if (op_eq_menu == 2) aktualny_stan = PWM6_EDIT_STATE;
-                else if (op_eq_menu == 3) aktualny_stan = PWM7_EDIT_STATE;
-                aktualizuj_vol_l(vol_l_lvl);
-                aktualizuj_vol_r(vol_r_lvl);
-                aktualizuj_eq(eq_lvl);
+                    current_state = MAIN_MANU_STATE;
+                } else if (op_eq_menu == 1) current_state = PWM5_EDIT_STATE;
+                else if (op_eq_menu == 2) current_state = PWM6_EDIT_STATE;
+                else if (op_eq_menu == 3) current_state = PWM7_EDIT_STATE;
+                update_vol_l(vol_l_lvl);
+                update_vol_r(vol_r_lvl);
+                update_eq(eq_lvl);
             }
             //funkcjonalnosci menu midi
-            else if (aktualny_stan == MIDI_MENU_STATE) {
+            else if (current_state == MIDI_MENU_STATE) {
                 if (op_midi_menu == 0) {
                     //wstecz
-                    aktualny_stan = STAN_MENU_GLOWNE;
+                    current_state = MAIN_MANU_STATE;
                 } else if (op_midi_menu == 1) {
                     midi_active = !midi_active;
                 }
             }
 
             //do listy parametrów
-            else if (aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM ||
-                     aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2 ||
-                     aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3 ||
-                     aktualny_stan == PRESET_EDIT_STATE) {
-                aktualny_stan = STAN_MENU_PWM;
-            } else if (aktualny_stan == PWM5_EDIT_STATE ||
-                       aktualny_stan == PWM6_EDIT_STATE ||
-                       aktualny_stan == PWM7_EDIT_STATE) {
-                aktualny_stan = EQ_MENU_STATE;
+            else if (current_state == PAR_ONE_EDIT_STATE ||
+                     current_state == PAR_TWO_EDIT_STATE ||
+                     current_state == PAR_THREE_EDIT_STATE ||
+                     current_state == PRESET_EDIT_STATE) {
+                current_state = PARAMS_MENU_STATE;
+            } else if (current_state == PWM5_EDIT_STATE ||
+                       current_state == PWM6_EDIT_STATE ||
+                       current_state == PWM7_EDIT_STATE) {
+                current_state = EQ_MENU_STATE;
             }
 
-            odswiez = 1;
+            update = 1;
             while (!(PIND & (1 << PD2))); //na puszczenie
         }
 
-        if (odswiez) {
-            if (aktualny_stan == STAN_MENU_GLOWNE) {
-                draw_menu(op_glowne);
-            } else if (aktualny_stan == STAN_MENU_PWM ||
-                       aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM ||
-                       aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM2 ||
-                       aktualny_stan == STAN_EDYCJA_WARTOSCI_PWM3 ||
-                       aktualny_stan == PRESET_EDIT_STATE) {
-                draw_params_menu(op_pwm_menu, wartosc_pwm, wartosc_pwm2, wartosc_pwm3,
-                                 aktualny_stan, pwm_aktywne, preset_id);
-            } else if (aktualny_stan == EQ_MENU_STATE ||
-                       aktualny_stan == PWM5_EDIT_STATE ||
-                       aktualny_stan == PWM6_EDIT_STATE ||
-                       aktualny_stan == PWM7_EDIT_STATE) {
-                draw_EQ_menu(op_eq_menu, vol_l_lvl, vol_r_lvl, eq_lvl, aktualny_stan);
-            } else if (aktualny_stan == MIDI_MENU_STATE) {
+        if (update) {
+            if (current_state == MAIN_MANU_STATE) {
+                draw_menu(main_menu);
+            } else if (current_state == PARAMS_MENU_STATE ||
+                       current_state == PAR_ONE_EDIT_STATE ||
+                       current_state == PAR_TWO_EDIT_STATE ||
+                       current_state == PAR_THREE_EDIT_STATE ||
+                       current_state == PRESET_EDIT_STATE) {
+                draw_params_menu(pwm_menu, par_one_val, par_two_val, par_three_val,
+                                 current_state, par_one_pwm_active, preset_id);
+            } else if (current_state == EQ_MENU_STATE ||
+                       current_state == PWM5_EDIT_STATE ||
+                       current_state == PWM6_EDIT_STATE ||
+                       current_state == PWM7_EDIT_STATE) {
+                draw_EQ_menu(op_eq_menu, vol_l_lvl, vol_r_lvl, eq_lvl, current_state);
+            } else if (current_state == MIDI_MENU_STATE) {
                 draw_MIDI_menu(op_midi_menu, midi_active);
             }
-            odswiez = 0;
+            update = 0;
         }
-/*
+
         if (midi_active) {
             int16_t c = uart_get_char();
-            if (c != -1) {
-                if ((uint8_t)c >= 0xC0 && (uint8_t)c <= 0xCF) {
-                    uint16_t timeout = 0;
-                    int16_t pgm_num = -1;
-                    while(pgm_num == -1 && timeout < 1000) {
-                        pgm_num = uart_get_char();
-                        timeout++;
-                    }
-                    if (pgm_num != -1) {
-                        preset_id = pgm_num;
-                        set_preset(preset_id);
+            if (c != -1 && (uint8_t)c >= 0xC0 && (uint8_t)c <= 0xCF) {
 
-                        odswiez = 1;
+                int16_t data_byte = -1;
+                uint16_t timeout = 0;
+
+                while (data_byte == -1 && timeout < 3000) {
+                    data_byte = uart_get_char();
+                    _delay_us(10);
+                    timeout++;
+                }
+
+                if (data_byte != -1) {
+                    uint8_t p = (uint8_t)data_byte;
+
+                    if (p == 0) {
+                        preset_id = 0;
                     }
+                    else if (p == 1) {
+                        preset_id = 1;
+                    }
+                    else if (p == 2) {
+                        preset_id = 2;
+                    }
+                    else if (p == 3) {
+                        preset_id = 3;
+                    }
+                    else if (p == 4) {
+                        preset_id = 4;
+                    }
+                    else {
+                        preset_id = p;
+                    }
+                    set_preset(preset_id);
+                    update = 1;
                 }
             }
-
         }
-    */
     }
 }
