@@ -3,7 +3,6 @@
 #include "OledMenuGui.h"
 #include <avr/interrupt.h>
 #include <stdbool.h>
-#include <string.h>
 
 #define LED_PIN PB1
 

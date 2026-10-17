@@ -1,6 +1,6 @@
 1. Modules
 
-We can categorise this effect into smoler sub-systems or sub-circuits to get
+We can categorise this effect into smaller sub-systems or sub-circuits to get
 better understanding of how this thing works.
 
 I will be naming this modules:
@@ -51,7 +51,6 @@ we should do that as close as possible to them.
 -since we using pwm to adjust parameters we need strong filters and dividers to connect to FV1.
 
 1.3 ATMega interfaces
-
 
 
 1.4 FV1 circuit
